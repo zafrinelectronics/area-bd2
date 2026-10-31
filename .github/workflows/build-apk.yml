@@ -33,10 +33,11 @@ jobs:
       - name: Install Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: "9.3.1"
+          gradle-version: "8.7"
 
       - name: Build debug APK
-        run: gradle assembleDebug
+        run: ./gradlew clean assembleDebug
+        
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
