@@ -1,5 +1,6 @@
 package com.example.data.repository
 
+import android.content.Context
 import com.example.data.db.ProductDao
 import com.example.data.db.SaleDao
 import com.example.data.model.Product
@@ -8,9 +9,12 @@ import com.example.data.model.Sale
 import kotlinx.coroutines.flow.Flow
 
 class InventoryRepository(
+    private val context: Context,
     private val productDao: ProductDao,
     private val saleDao: SaleDao
 ) {
+    private val prefs = context.getSharedPreferences("apple_area_bd_prefs", Context.MODE_PRIVATE)
+
     val allProducts: Flow<List<Product>> = productDao.getAllProducts()
     val inStockProducts: Flow<List<Product>> = productDao.getInStockProducts()
     val allSales: Flow<List<Sale>> = saleDao.getAllSales()
@@ -93,10 +97,13 @@ class InventoryRepository(
     }
 
     /**
-     * Seeds initial realistic mock inventory for APPLE AREA BD if the database is newly opened.
+     * Seeds initial realistic mock inventory for APPLE AREA BD ONLY ONCE on fresh install.
      */
-    suspend fun seedInitialDataIfEmpty() {
-        if (productDao.getProductCount() == 0) {
+    suspend fun seedInitialDataIfEmpty(force: Boolean = false) {
+        val hasSeeded = prefs.getBoolean("has_seeded_initial_data", false)
+        if (!hasSeeded || force) {
+            val currentCount = productDao.getProductCount()
+            if (currentCount == 0 || force) {
             val sampleProducts = listOf(
                 Product(
                     company = "Apple",
@@ -221,6 +228,18 @@ class InventoryRepository(
                 remarks = "বাকি ৬,০০০ টাকা আগামী মাসের ১ তারিখে দেবে।"
             )
             saleDao.insertSale(sampleSale)
+            }
+            prefs.edit().putBoolean("has_seeded_initial_data", true).apply()
         }
+    }
+
+    suspend fun clearAllData() {
+        productDao.deleteAllProducts()
+        saleDao.deleteAllSales()
+        prefs.edit().putBoolean("has_seeded_initial_data", true).apply()
+    }
+
+    suspend fun seedDemoData() {
+        seedInitialDataIfEmpty(force = true)
     }
 }

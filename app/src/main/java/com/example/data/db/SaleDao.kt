@@ -37,4 +37,7 @@ interface SaleDao {
 
     @Query("UPDATE sales SET paidAmount = :paidAmount, dueAmount = :dueAmount WHERE id = :id")
     suspend fun updateDuePayment(id: Long, paidAmount: Double, dueAmount: Double)
+
+    @Query("DELETE FROM sales")
+    suspend fun deleteAllSales()
 }

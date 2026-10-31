@@ -21,13 +21,17 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CloudDownload
+import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.VerifiedUser
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.filled.Widgets
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -42,6 +46,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,8 +69,13 @@ import com.example.ui.theme.AppleBlue
 fun SettingsScreen(
     currentSettings: ShopSettings,
     onSaveSettings: (ShopSettings) -> Unit,
-    onResetDefaults: () -> Unit
+    onResetDefaults: () -> Unit,
+    onClearAllData: () -> Unit = {},
+    onLoadDemoData: () -> Unit = {}
 ) {
+    var showClearConfirmDialog by remember { mutableStateOf(false) }
+    var showLoadDemoConfirmDialog by remember { mutableStateOf(false) }
+
     var shopName by remember(currentSettings) { mutableStateOf(currentSettings.shopName) }
     var shopTagline by remember(currentSettings) { mutableStateOf(currentSettings.shopTagline) }
     var shopPhone by remember(currentSettings) { mutableStateOf(currentSettings.shopPhone) }
@@ -379,6 +389,64 @@ fun SettingsScreen(
             }
         }
 
+        // Section 4: Data Management & Reset
+        item {
+            ElevatedCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(imageVector = Icons.Default.DeleteSweep, contentDescription = null, tint = Color(0xFFEF4444))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "৪. ডাটাবেজ ব্যাকআপ ও ম্যানেজমেন্ট", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    Text(
+                        text = "নতুন করে আপনার আসল দোকানের স্টক তোলার জন্য সব ডামি ডাটা ক্লিয়ার করতে পারেন, অথবা চাইলে ডেমো ডাটা ফিরিয়ে আনতে পারেন:",
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedButton(
+                            onClick = { showLoadDemoConfirmDialog = true },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                                .testTag("load_demo_data_button"),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(imageVector = Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("ডেমো ডাটা লোড", fontSize = 11.sp)
+                        }
+
+                        Button(
+                            onClick = { showClearConfirmDialog = true },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp)
+                                .testTag("clear_all_data_button"),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444)),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Icon(imageVector = Icons.Default.DeleteSweep, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("সব ডাটা ক্লিয়ার", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
+
         // Action Buttons: Save Settings & Reset
         item {
             Button(
@@ -428,6 +496,54 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(80.dp))
         }
+    }
+
+    if (showClearConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearConfirmDialog = false },
+            icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFEF4444)) },
+            title = { Text("সকল ডাটা মুছে ফেলতে চান?") },
+            text = { Text("এটি আপনার সকল স্টক পণ্য এবং বিক্রয় মেমো স্থায়ীভাবে মুছে দেবে। আপনি কি নিশ্চিত?") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showClearConfirmDialog = false
+                        onClearAllData()
+                    }
+                ) {
+                    Text("হ্যাঁ, সব মুছে ফেলুন", color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearConfirmDialog = false }) {
+                    Text("বাতিল")
+                }
+            }
+        )
+    }
+
+    if (showLoadDemoConfirmDialog) {
+        AlertDialog(
+            onDismissRequest = { showLoadDemoConfirmDialog = false },
+            icon = { Icon(Icons.Default.CloudDownload, contentDescription = null, tint = AppleBlue) },
+            title = { Text("ডেমো ডাটা লোড করতে চান?") },
+            text = { Text("অ্যাপটিতে ৬টি নমুনা আইফোন/স্যামসাং ফোন এবং ১টি নমুনা বিক্রয় মেমো যুক্ত হবে।") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showLoadDemoConfirmDialog = false
+                        onLoadDemoData()
+                    }
+                ) {
+                    Text("লোড করুন", color = AppleBlue, fontWeight = FontWeight.Bold)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLoadDemoConfirmDialog = false }) {
+                    Text("বাতিল")
+                }
+            }
+        )
     }
 }
 

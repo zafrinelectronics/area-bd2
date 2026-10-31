@@ -111,7 +111,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
 
     init {
         val db = AppDatabase.getDatabase(application)
-        repository = InventoryRepository(db.productDao(), db.saleDao())
+        repository = InventoryRepository(application, db.productDao(), db.saleDao())
 
         allProducts = repository.allProducts.stateIn(
             scope = viewModelScope,
@@ -458,6 +458,20 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     fun resetShopSettings() {
         settingsManager.resetToDefaults()
         _snackbarMessage.value = "ডিফল্ট সেটিংস সফলভাবে রিস্টোর হয়েছে!"
+    }
+
+    fun clearAllDatabaseData() {
+        viewModelScope.launch {
+            repository.clearAllData()
+            _snackbarMessage.value = "সকল স্টক এবং বিক্রয় তথ্য মুছে ফেলা হয়েছে।"
+        }
+    }
+
+    fun loadDemoData() {
+        viewModelScope.launch {
+            repository.seedDemoData()
+            _snackbarMessage.value = "ডেমো স্টক এবং বিক্রয় তথ্য সফলভাবে লোড হয়েছে।"
+        }
     }
 
     // Scanner

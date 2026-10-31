@@ -78,14 +78,13 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.annotation.OptIn
+import androidx.camera.core.ExperimentalGetImage
 import com.example.ui.theme.AppleBlue
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.BinaryBitmap
-import com.google.zxing.DecodeHintType
-import com.google.zxing.MultiFormatReader
-import com.google.zxing.NotFoundException
-import com.google.zxing.PlanarYUVLuminanceSource
-import com.google.zxing.common.HybridBinarizer
+import com.google.mlkit.vision.barcode.BarcodeScannerOptions
+import com.google.mlkit.vision.barcode.BarcodeScanning
+import com.google.mlkit.vision.barcode.common.Barcode
+import com.google.mlkit.vision.common.InputImage
 import java.util.concurrent.Executors
 
 @Composable
@@ -249,7 +248,7 @@ fun ScannerDialog(
 
                                         imageAnalysis.setAnalyzer(
                                             cameraExecutor,
-                                            ZxingBarcodeAnalyzer { scannedText ->
+                                            MlKitBarcodeAnalyzer { scannedText ->
                                                 triggerHaptic()
                                                 previewView.post {
                                                     onBarcodeScanned(scannedText)
@@ -422,63 +421,52 @@ fun ScannerDialog(
 }
 
 /**
- * High-speed offline ZXing Barcode Analyzer for CameraX frames
+ * Hardware-accelerated offline ML Kit Barcode Analyzer for CameraX frames.
+ * Accurately decodes 1D barcodes (Code 128, EAN-13, IMEI) and QR codes from rotated sensor frames.
  */
-private class ZxingBarcodeAnalyzer(
+private class MlKitBarcodeAnalyzer(
     private val onBarcodeFound: (String) -> Unit
 ) : ImageAnalysis.Analyzer {
 
-    private val reader = MultiFormatReader().apply {
-        val hints = mapOf(
-            DecodeHintType.POSSIBLE_FORMATS to listOf(
-                BarcodeFormat.CODE_128,
-                BarcodeFormat.CODE_39,
-                BarcodeFormat.EAN_13,
-                BarcodeFormat.EAN_8,
-                BarcodeFormat.UPC_A,
-                BarcodeFormat.UPC_E,
-                BarcodeFormat.QR_CODE,
-                BarcodeFormat.DATA_MATRIX,
-                BarcodeFormat.ITF
-            ),
-            DecodeHintType.TRY_HARDER to true
-        )
-        setHints(hints)
-    }
+    private val options = BarcodeScannerOptions.Builder()
+        .setBarcodeFormats(Barcode.FORMAT_ALL_FORMATS)
+        .build()
 
+    private val scanner = BarcodeScanning.getClient(options)
     private var hasFound = false
 
+    @OptIn(ExperimentalGetImage::class)
     override fun analyze(imageProxy: ImageProxy) {
         if (hasFound) {
             imageProxy.close()
             return
         }
 
-        try {
-            val plane = imageProxy.planes[0]
-            val buffer = plane.buffer
-            val data = ByteArray(buffer.remaining())
-            buffer.get(data)
+        val mediaImage = imageProxy.image
+        if (mediaImage != null) {
+            val rotationDegrees = imageProxy.imageInfo.rotationDegrees
+            val inputImage = InputImage.fromMediaImage(mediaImage, rotationDegrees)
 
-            val width = imageProxy.width
-            val height = imageProxy.height
-
-            val source = PlanarYUVLuminanceSource(
-                data, width, height, 0, 0, width, height, false
-            )
-            val bitmap = BinaryBitmap(HybridBinarizer(source))
-
-            val result = reader.decodeWithState(bitmap)
-            if (result != null && result.text.isNotBlank()) {
-                hasFound = true
-                onBarcodeFound(result.text)
-            }
-        } catch (_: NotFoundException) {
-            // No barcode detected in this specific frame
-        } catch (e: Exception) {
-            Log.d("ZxingBarcodeAnalyzer", "Frame analysis exception: ${e.message}")
-        } finally {
-            reader.reset()
+            scanner.process(inputImage)
+                .addOnSuccessListener { barcodes ->
+                    if (!hasFound && barcodes.isNotEmpty()) {
+                        for (barcode in barcodes) {
+                            val value = barcode.rawValue ?: barcode.displayValue
+                            if (!value.isNullOrBlank()) {
+                                hasFound = true
+                                onBarcodeFound(value.trim())
+                                break
+                            }
+                        }
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Log.d("MlKitBarcodeAnalyzer", "Scan frame error: ${e.message}")
+                }
+                .addOnCompleteListener {
+                    imageProxy.close()
+                }
+        } else {
             imageProxy.close()
         }
     }

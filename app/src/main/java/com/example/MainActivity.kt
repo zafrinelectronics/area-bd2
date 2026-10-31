@@ -328,7 +328,9 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                 AppTab.SETTINGS -> SettingsScreen(
                     currentSettings = shopSettings,
                     onSaveSettings = { viewModel.updateShopSettings(it) },
-                    onResetDefaults = { viewModel.resetShopSettings() }
+                    onResetDefaults = { viewModel.resetShopSettings() },
+                    onClearAllData = { viewModel.clearAllDatabaseData() },
+                    onLoadDemoData = { viewModel.loadDemoData() }
                 )
             }
         }

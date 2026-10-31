@@ -26,10 +26,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.PhoneIphone
+import androidx.compose.material.icons.filled.Print
 import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material.icons.filled.Share
+import com.example.util.PdfInvoiceGenerator
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -433,35 +436,73 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                 }
 
                 // Interactive Action Buttons
+                // Row 1: PDF Download & Direct Print
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Button(
-                        onClick = { shareInvoiceText() },
+                        onClick = {
+                            PdfInvoiceGenerator.savePdfToDownloads(context, sale, shopSettings)
+                        },
                         modifier = Modifier
                             .weight(1f)
                             .height(48.dp)
-                            .testTag("share_invoice_button"),
-                        colors = ButtonDefaults.buttonColors(containerColor = AppleBlue),
+                            .testTag("download_pdf_button"),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0284C7)),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Icon(imageVector = Icons.Default.Share, contentDescription = "Share")
+                        Icon(imageVector = Icons.Default.Download, contentDescription = "Download PDF")
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("মেমো শেয়ার", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text("PDF ডাউনলোড", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    Button(
+                        onClick = {
+                            PdfInvoiceGenerator.printInvoice(context, sale, shopSettings)
+                        },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(48.dp)
+                            .testTag("print_invoice_button"),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF10B981)),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.Print, contentDescription = "Print Invoice")
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("প্রিন্ট করুন", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                // Row 2: Share Memo & Call Customer
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    OutlinedButton(
+                        onClick = { shareInvoiceText() },
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                            .testTag("share_invoice_button"),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.Share, contentDescription = "Share", modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text("মেমো শেয়ার", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     }
 
                     OutlinedButton(
                         onClick = { callCustomer() },
                         modifier = Modifier
                             .weight(1f)
-                            .height(48.dp)
+                            .height(44.dp)
                             .testTag("call_customer_button"),
                         shape = RoundedCornerShape(12.dp)
                     ) {
-                        Icon(imageVector = Icons.Default.Call, contentDescription = "Call")
+                        Icon(imageVector = Icons.Default.Call, contentDescription = "Call", modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("ক্রেতাকে কল", fontSize = 13.sp)
+                        Text("ক্রেতাকে কল", fontSize = 12.sp)
                     }
                 }
 
