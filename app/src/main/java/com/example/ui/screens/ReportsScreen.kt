@@ -66,36 +66,39 @@ fun ReportsScreen(
     onPeriodSelect: (String) -> Unit
 ) {
     val context = LocalContext.current
-    val currentDateStr = SimpleDateFormat("dd MMMM, yyyy", Locale("bn", "BD")).format(Date())
+    val strings = com.example.ui.LocalAppStrings.current
+    val isEnglish = strings.tabDashboard == "Dashboard"
+    val lang = if (isEnglish) "EN" else "BN"
+    val currentDateStr = SimpleDateFormat("dd MMMM, yyyy", if (isEnglish) Locale.US else Locale("bn", "BD")).format(Date())
 
     fun shareReportText() {
         val summaryText = """
-📊 APPLE AREA BD • মাসিক হিসাবের সারসংক্ষেপ
-তারিখ: $currentDateStr
-সময়কাল: ${report.periodName}
+📊 ${strings.appTitle} • ${strings.reportsTitle}
+${if (isEnglish) "Date:" else "তারিখ:"} $currentDateStr
+${if (isEnglish) "Period:" else "সময়কাল:"} ${report.periodName}
 ════════════════════════════════════
-📱 বিক্রিত ফোন সংখ্যা: ${report.unitsSold} টি
-💰 মোট বিক্রয় মূল্য: ৳ ${InventoryViewModel.formatBdt(report.totalRevenue)}
-📦 মোট ক্রয় খরচ: ৳ ${InventoryViewModel.formatBdt(report.totalCost)}
-📈 মোট নিট লাভ: ৳ ${InventoryViewModel.formatBdt(report.totalProfit)}
-🎯 প্রফিট মার্জিন: ${String.format("%.1f", report.profitMarginPercent)}%
+📱 ${strings.reportUnitsSold}: ${report.unitsSold}
+💰 ${strings.reportTotalRevenue}: ${strings.currencySymbol} ${InventoryViewModel.formatAmount(report.totalRevenue, lang)}
+📦 ${strings.reportTotalCost}: ${strings.currencySymbol} ${InventoryViewModel.formatAmount(report.totalCost, lang)}
+📈 ${strings.reportTotalProfit}: ${strings.currencySymbol} ${InventoryViewModel.formatAmount(report.totalProfit, lang)}
+🎯 ${strings.reportProfitMargin}: ${String.format("%.1f", report.profitMarginPercent)}%
 
-💵 নগদ ও অনলাইন আদায়: ৳ ${InventoryViewModel.formatBdt(report.totalPaid)}
-⚠️ কাস্টমারের নিকট বকেয়া: ৳ ${InventoryViewModel.formatBdt(report.totalDue)}
+💵 ${strings.reportTotalPaid}: ${strings.currencySymbol} ${InventoryViewModel.formatAmount(report.totalPaid, lang)}
+⚠️ ${strings.reportTotalDue}: ${strings.currencySymbol} ${InventoryViewModel.formatAmount(report.totalDue, lang)}
 
-[দোকানের বর্তমান মোট ইনভেন্টরি অবস্থা]
-📦 স্টকে থাকা ফোন: ${metrics.inStockCount} টি
-💎 বর্তমান স্টক ইনভেস্টমেন্ট মূল্য: ৳ ${InventoryViewModel.formatBdt(metrics.totalStockValue)}
+[${if (isEnglish) "Current Shop Stock Status" else "দোকানের বর্তমান মোট ইনভেন্টরি অবস্থা"}]
+📦 ${if (isEnglish) "In-stock phones:" else "স্টকে থাকা ফোন:"} ${metrics.inStockCount}
+💎 ${if (isEnglish) "Total Stock Investment:" else "বর্তমান স্টক ইনভেস্টমেন্ট মূল্য:"} ${strings.currencySymbol} ${InventoryViewModel.formatAmount(metrics.totalStockValue, lang)}
 ════════════════════════════════════
-APPLE AREA BD • নির্ভরযোগ্য স্মার্টফোন হিসাব ব্যবস্থা
+${strings.appTitle}
         """.trimIndent()
 
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
-            putExtra(Intent.EXTRA_SUBJECT, "APPLE AREA BD - মাসিক রিপোর্ট")
+            putExtra(Intent.EXTRA_SUBJECT, "${strings.appTitle} - ${strings.reportsTitle}")
             putExtra(Intent.EXTRA_TEXT, summaryText)
         }
-        context.startActivity(Intent.createChooser(intent, "রিপোর্ট শেয়ার করুন"))
+        context.startActivity(Intent.createChooser(intent, if (isEnglish) "Share Report" else "রিপোর্ট শেয়ার করুন"))
     }
 
     LazyColumn(
@@ -121,12 +124,12 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                 ) {
                     Column {
                         Text(
-                            text = "মাসিক রিপোর্ট ও হিসাবের সারসংক্ষেপ",
+                            text = strings.reportsTitle,
                             fontSize = 17.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "APPLE AREA BD • প্রফিট ও বিক্রয় অ্যানালিটিক্স",
+                            text = "${strings.appTitle} • ${if (isEnglish) "Sales & Profit Analytics" else "প্রফিট ও বিক্রয় অ্যানালিটিক্স"}",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -157,7 +160,7 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                 FilterChip(
                     selected = selectedPeriod == "THIS_MONTH",
                     onClick = { onPeriodSelect("THIS_MONTH") },
-                    label = { Text("চলতি মাস", fontSize = 12.sp) },
+                    label = { Text(strings.periodThisMonth, fontSize = 12.sp) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = AppleBlue,
                         selectedLabelColor = Color.White
@@ -168,7 +171,7 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                 FilterChip(
                     selected = selectedPeriod == "LAST_MONTH",
                     onClick = { onPeriodSelect("LAST_MONTH") },
-                    label = { Text("বিগত মাস", fontSize = 12.sp) },
+                    label = { Text(strings.periodLastMonth, fontSize = 12.sp) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = AppleBlue,
                         selectedLabelColor = Color.White
@@ -179,7 +182,7 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                 FilterChip(
                     selected = selectedPeriod == "ALL_TIME",
                     onClick = { onPeriodSelect("ALL_TIME") },
-                    label = { Text("সর্বমোট হিসাব", fontSize = 12.sp) },
+                    label = { Text(strings.periodAllTime, fontSize = 12.sp) },
                     colors = FilterChipDefaults.filterChipColors(
                         selectedContainerColor = AppleBlue,
                         selectedLabelColor = Color.White
@@ -261,42 +264,42 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
-                        text = "আর্থিক সারসংক্ষেপ বিবরণী:",
+                        text = if (isEnglish) "Financial Statement Overview:" else "আর্থিক সারসংক্ষেপ বিবরণী:",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.Bold
                     )
 
                     ReportRow(
-                        label = "বিক্রিত মোট মোবাইল:",
-                        value = "${report.unitsSold} টি",
+                        label = "${strings.reportUnitsSold}:",
+                        value = "${report.unitsSold} ${if (isEnglish) "units" else "টি"}",
                         color = MaterialTheme.colorScheme.onSurface
                     )
                     HorizontalDivider()
 
                     ReportRow(
-                        label = "মোট বিক্রয় মূল্য (Revenue):",
-                        value = "৳ ${InventoryViewModel.formatBdt(report.totalRevenue)}",
+                        label = "${strings.reportTotalRevenue}:",
+                        value = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(report.totalRevenue, lang)}",
                         color = AppleBlue
                     )
                     HorizontalDivider()
 
                     ReportRow(
-                        label = "মোট ফোনের কেনা খরচ (COGS):",
-                        value = "৳ ${InventoryViewModel.formatBdt(report.totalCost)}",
+                        label = "${strings.reportTotalCost}:",
+                        value = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(report.totalCost, lang)}",
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                     HorizontalDivider()
 
                     ReportRow(
-                        label = "পরিশোধিত নগদ ও ডিজিটাল পেমেন্ট:",
-                        value = "৳ ${InventoryViewModel.formatBdt(report.totalPaid)}",
+                        label = "${strings.reportTotalPaid}:",
+                        value = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(report.totalPaid, lang)}",
                         color = Color(0xFF10B981)
                     )
                     HorizontalDivider()
 
                     ReportRow(
-                        label = "ক্রেতার কাছে বর্তমান বকেয়া:",
-                        value = "৳ ${InventoryViewModel.formatBdt(report.totalDue)}",
+                        label = "${strings.reportTotalDue}:",
+                        value = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(report.totalDue, lang)}",
                         color = if (report.totalDue > 0) Color(0xFFD97706) else Color(0xFF10B981),
                         isBold = true
                     )
@@ -321,7 +324,7 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "বর্তমান দোকানের স্টক স্ট্যাটাস:",
+                            text = if (isEnglish) "Current Inventory Valuation:" else "বর্তমান দোকানের স্টক স্ট্যাটাস:",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -337,17 +340,17 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = "বর্তমানে অবিক্রিত ফোন:", fontSize = 12.sp)
-                        Text(text = "${metrics.inStockCount} টি", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(text = if (isEnglish) "In-stock phones:" else "বর্তমানে অবিক্রিত ফোন:", fontSize = 12.sp)
+                        Text(text = "${metrics.inStockCount} ${if (isEnglish) "units" else "টি"}", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
 
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
-                        Text(text = "স্টকে বর্তমান আটকে থাকা ইনভেস্টমেন্ট:", fontSize = 12.sp)
+                        Text(text = if (isEnglish) "Current Stock Investment Value:" else "স্টকে বর্তমান আটকে থাকা ইনভেস্টমেন্ট:", fontSize = 12.sp)
                         Text(
-                            text = "৳ ${InventoryViewModel.formatBdt(metrics.totalStockValue)}",
+                            text = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(metrics.totalStockValue, lang)}",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = AppleBlue
@@ -378,7 +381,7 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                             )
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "সর্বাধিক বিক্রিত মডেল সমূহ:",
+                                text = strings.topSellingModelsHeader,
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold
                             )
@@ -412,7 +415,7 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                                     color = AppleBlue.copy(alpha = 0.1f)
                                 ) {
                                     Text(
-                                        text = "$count টি বিক্রিত",
+                                        text = "$count ${if (isEnglish) "sold" else "টি বিক্রিত"}",
                                         fontSize = 11.sp,
                                         fontWeight = FontWeight.Bold,
                                         color = AppleBlue,
@@ -439,7 +442,11 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
             ) {
                 Icon(imageVector = Icons.Default.Share, contentDescription = "Share")
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("মাসিক রিপোর্ট শেয়ার / কপি করুন", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = if (isEnglish) "Share / Copy Monthly Report" else "মাসিক রিপোর্ট শেয়ার / কপি করুন",
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
             Spacer(modifier = Modifier.height(80.dp))
         }

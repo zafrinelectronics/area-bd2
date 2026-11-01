@@ -23,10 +23,12 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.DeleteSweep
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.RestartAlt
 import androidx.compose.material.icons.filled.Save
 import androidx.compose.material.icons.filled.Settings
+import com.example.ui.LocalAppStrings
 import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material.icons.filled.Warning
@@ -73,9 +75,11 @@ fun SettingsScreen(
     onClearAllData: () -> Unit = {},
     onLoadDemoData: () -> Unit = {}
 ) {
+    val strings = LocalAppStrings.current
     var showClearConfirmDialog by remember { mutableStateOf(false) }
     var showLoadDemoConfirmDialog by remember { mutableStateOf(false) }
 
+    var selectedLanguage by remember(currentSettings) { mutableStateOf(currentSettings.appLanguage) }
     var shopName by remember(currentSettings) { mutableStateOf(currentSettings.shopName) }
     var shopTagline by remember(currentSettings) { mutableStateOf(currentSettings.shopTagline) }
     var shopPhone by remember(currentSettings) { mutableStateOf(currentSettings.shopPhone) }
@@ -132,12 +136,12 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "সেটিংস ও কাস্টমাইজেশন",
+                                text = strings.settingsTitle,
                                 fontSize = 17.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "ক্যাশ মেমো, ওয়ারেন্টি ও বক্স অপশন",
+                                text = strings.settingsSubtitle,
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -151,6 +155,75 @@ fun SettingsScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Icon(imageVector = Icons.Default.Settings, contentDescription = null, tint = AppleBlue)
+                    }
+                }
+            }
+        }
+
+        // Section: Language Selection (English / বাংলা)
+        item {
+            ElevatedCard(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
+            ) {
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(imageVector = Icons.Default.Language, contentDescription = null, tint = AppleBlue)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = strings.languageSectionTitle, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    }
+
+                    Text(
+                        text = strings.languageSectionSubtitle,
+                        fontSize = 11.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        // Bangla Button
+                        Button(
+                            onClick = {
+                                selectedLanguage = "BN"
+                                onSaveSettings(currentSettings.copy(appLanguage = "BN"))
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(46.dp)
+                                .testTag("select_language_bn"),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (selectedLanguage == "BN") AppleBlue else MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = if (selectedLanguage == "BN") Color.White else MaterialTheme.colorScheme.onSurface
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("বাংলা (Bangla)", fontSize = 13.sp, fontWeight = if (selectedLanguage == "BN") FontWeight.Bold else FontWeight.Normal)
+                        }
+
+                        // English Button
+                        Button(
+                            onClick = {
+                                selectedLanguage = "EN"
+                                onSaveSettings(currentSettings.copy(appLanguage = "EN"))
+                            },
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(46.dp)
+                                .testTag("select_language_en"),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = if (selectedLanguage == "EN") AppleBlue else MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = if (selectedLanguage == "EN") Color.White else MaterialTheme.colorScheme.onSurface
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Text("English", fontSize = 13.sp, fontWeight = if (selectedLanguage == "EN") FontWeight.Bold else FontWeight.Normal)
+                        }
                     }
                 }
             }
@@ -170,13 +243,13 @@ fun SettingsScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(imageVector = Icons.Default.Storefront, contentDescription = null, tint = AppleBlue)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "১. দোকানের তথ্য ও মেমো হেডার", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text(text = strings.shopProfileSection, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
 
                     OutlinedTextField(
                         value = shopName,
                         onValueChange = { shopName = it },
-                        label = { Text("দোকানের নাম") },
+                        label = { Text(strings.shopNameLabel) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
@@ -185,7 +258,7 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = shopTagline,
                         onValueChange = { shopTagline = it },
-                        label = { Text("ট্যাগলাইন / উপাধি") },
+                        label = { Text(strings.shopTaglineLabel) },
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
@@ -198,7 +271,7 @@ fun SettingsScreen(
                         OutlinedTextField(
                             value = shopPhone,
                             onValueChange = { shopPhone = it },
-                            label = { Text("ফোন নম্বর") },
+                            label = { Text(strings.shopPhoneLabel) },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
@@ -207,7 +280,7 @@ fun SettingsScreen(
                         OutlinedTextField(
                             value = shopAddress,
                             onValueChange = { shopAddress = it },
-                            label = { Text("ঠিকানা") },
+                            label = { Text(strings.shopAddressLabel) },
                             singleLine = true,
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp)
@@ -231,11 +304,11 @@ fun SettingsScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(imageVector = Icons.Default.VerifiedUser, contentDescription = null, tint = Color(0xFF10B981))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "২. ওয়ারেন্টি কার্ড ও পলিসি কাস্টমাইজেশন", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text(text = strings.warrantyCustomizationSection, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
 
                     Text(
-                        text = "ক্যাশ মেমো এবং ইনভয়েসে প্রিন্ট হওয়ার জন্য ওয়ারেন্টি শর্তাবলী সেট করুন:",
+                        text = strings.warrantyDesc,
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -244,7 +317,7 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = warrantyReplacement,
                         onValueChange = { warrantyReplacement = it },
-                        label = { Text("১. রিপ্লেসমেন্ট গ্যারান্টি শর্ত") },
+                        label = { Text(strings.warrantyReplacementLabel) },
                         minLines = 2,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
@@ -254,7 +327,7 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = warrantyService,
                         onValueChange = { warrantyService = it },
-                        label = { Text("২. সার্ভিস ওয়ারেন্টি শর্ত") },
+                        label = { Text(strings.warrantyServiceLabel) },
                         minLines = 2,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
@@ -264,7 +337,7 @@ fun SettingsScreen(
                     OutlinedTextField(
                         value = warrantyExchangeDeduction,
                         onValueChange = { warrantyExchangeDeduction = it },
-                        label = { Text("৩. এক্সচেঞ্জ ও সেল ডিডাকশন পলিসি") },
+                        label = { Text(strings.warrantyExchangeLabel) },
                         minLines = 2,
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp)
@@ -280,7 +353,7 @@ fun SettingsScreen(
                             modifier = Modifier.padding(12.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            Text(text = "লাইভ ক্যাশ মেমো প্রিভিউ:", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = AppleBlue)
+                            Text(text = strings.warrantyLivePreview, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = AppleBlue)
                             Text(text = "• $warrantyReplacement", fontSize = 11.sp)
                             Text(text = "• $warrantyService", fontSize = 11.sp)
                             Text(text = "• $warrantyExchangeDeduction", fontSize = 11.sp)
@@ -403,11 +476,11 @@ fun SettingsScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(imageVector = Icons.Default.DeleteSweep, contentDescription = null, tint = Color(0xFFEF4444))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(text = "৪. ডাটাবেজ ব্যাকআপ ও ম্যানেজমেন্ট", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                        Text(text = strings.dataManagementSection, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                     }
 
                     Text(
-                        text = "নতুন করে আপনার আসল দোকানের স্টক তোলার জন্য সব ডামি ডাটা ক্লিয়ার করতে পারেন, অথবা চাইলে ডেমো ডাটা ফিরিয়ে আনতে পারেন:",
+                        text = strings.dataManagementSubtitle,
                         fontSize = 11.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -426,7 +499,7 @@ fun SettingsScreen(
                         ) {
                             Icon(imageVector = Icons.Default.CloudDownload, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("ডেমো ডাটা লোড", fontSize = 11.sp)
+                            Text(strings.btnLoadDemoData, fontSize = 11.sp)
                         }
 
                         Button(
@@ -440,7 +513,7 @@ fun SettingsScreen(
                         ) {
                             Icon(imageVector = Icons.Default.DeleteSweep, contentDescription = null, modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("সব ডাটা ক্লিয়ার", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text(strings.btnClearAllData, fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -452,6 +525,7 @@ fun SettingsScreen(
             Button(
                 onClick = {
                     val updated = currentSettings.copy(
+                        appLanguage = selectedLanguage,
                         shopName = shopName.trim(),
                         shopTagline = shopTagline.trim(),
                         shopPhone = shopPhone.trim(),
@@ -476,7 +550,7 @@ fun SettingsScreen(
             ) {
                 Icon(imageVector = Icons.Default.Save, contentDescription = "Save")
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("সব পরিবর্তন সেভ করুন (Save Settings)", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                Text(strings.btnSaveSettings, fontSize = 15.sp, fontWeight = FontWeight.Bold)
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -491,7 +565,7 @@ fun SettingsScreen(
             ) {
                 Icon(imageVector = Icons.Default.RestartAlt, contentDescription = "Reset")
                 Spacer(modifier = Modifier.width(6.dp))
-                Text("ডিফল্ট সেটিংসে রিসেট করুন", fontSize = 13.sp)
+                Text(strings.btnResetDefaults, fontSize = 13.sp)
             }
 
             Spacer(modifier = Modifier.height(80.dp))
@@ -502,8 +576,8 @@ fun SettingsScreen(
         AlertDialog(
             onDismissRequest = { showClearConfirmDialog = false },
             icon = { Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFEF4444)) },
-            title = { Text("সকল ডাটা মুছে ফেলতে চান?") },
-            text = { Text("এটি আপনার সকল স্টক পণ্য এবং বিক্রয় মেমো স্থায়ীভাবে মুছে দেবে। আপনি কি নিশ্চিত?") },
+            title = { Text(strings.confirmClearTitle) },
+            text = { Text(strings.confirmClearText) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -511,12 +585,12 @@ fun SettingsScreen(
                         onClearAllData()
                     }
                 ) {
-                    Text("হ্যাঁ, সব মুছে ফেলুন", color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
+                    Text(strings.delete, color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showClearConfirmDialog = false }) {
-                    Text("বাতিল")
+                    Text(strings.cancel)
                 }
             }
         )
@@ -526,8 +600,8 @@ fun SettingsScreen(
         AlertDialog(
             onDismissRequest = { showLoadDemoConfirmDialog = false },
             icon = { Icon(Icons.Default.CloudDownload, contentDescription = null, tint = AppleBlue) },
-            title = { Text("ডেমো ডাটা লোড করতে চান?") },
-            text = { Text("অ্যাপটিতে ৬টি নমুনা আইফোন/স্যামসাং ফোন এবং ১টি নমুনা বিক্রয় মেমো যুক্ত হবে।") },
+            title = { Text(strings.confirmLoadDemoTitle) },
+            text = { Text(strings.confirmLoadDemoText) },
             confirmButton = {
                 TextButton(
                     onClick = {
@@ -535,12 +609,12 @@ fun SettingsScreen(
                         onLoadDemoData()
                     }
                 ) {
-                    Text("লোড করুন", color = AppleBlue, fontWeight = FontWeight.Bold)
+                    Text(strings.confirm, color = AppleBlue, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showLoadDemoConfirmDialog = false }) {
-                    Text("বাতিল")
+                    Text(strings.cancel)
                 }
             }
         )

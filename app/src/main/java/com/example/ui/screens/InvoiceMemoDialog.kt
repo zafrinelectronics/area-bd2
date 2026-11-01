@@ -79,49 +79,52 @@ fun InvoiceMemoDialog(
     onDeleteSale: (Sale, Boolean) -> Unit = { _, _ -> }
 ) {
     val context = LocalContext.current
-    val dateFormat = SimpleDateFormat("dd MMMM, yyyy - hh:mm a", Locale("bn", "BD"))
+    val strings = com.example.ui.LocalAppStrings.current
+    val isEnglish = strings.tabDashboard == "Dashboard"
+    val lang = if (isEnglish) "EN" else "BN"
+    val dateFormat = SimpleDateFormat("dd MMMM, yyyy - hh:mm a", if (isEnglish) Locale.US else Locale("bn", "BD"))
     val formattedDate = dateFormat.format(Date(sale.soldAt))
 
     fun shareInvoiceText() {
         val invoiceText = """
 ══════════════════════════════
-        APPLE AREA BD
-   এক্সক্লুসিভ স্মার্টফোন শপ
+        ${shopSettings.shopName}
+    ${shopSettings.shopTagline}
 ══════════════════════════════
-ইনভয়েস নং: ${sale.invoiceNumber}
-তারিখ: $formattedDate
+${strings.invoiceNoLabel}: #${sale.invoiceNumber}
+${strings.dateLabel}: $formattedDate
 
-[ক্রেতার তথ্য]
-নাম: ${sale.customerName}
-মোবাইল: ${sale.customerPhone}
-${if (sale.customerAddress.isNotBlank()) "ঠিকানা: ${sale.customerAddress}" else ""}
+[${strings.customerInfoSection}]
+${if (isEnglish) "Name:" else "নাম:"} ${sale.customerName}
+${if (isEnglish) "Phone:" else "মোবাইল:"} ${sale.customerPhone}
+${if (sale.customerAddress.isNotBlank()) "${if (isEnglish) "Address:" else "ঠিকানা:"} ${sale.customerAddress}" else ""}
 
-[ডিভাইস বিবরণ]
-প্রোডাক্ট: ${sale.productDetails}
-আইএমইআই (IMEI): ${sale.imei}
-${if (sale.batteryHealth.isNotBlank()) "ব্যাটারি হেল্থ: ${sale.batteryHealth}" else ""}
-${if (sale.boxCondition.isNotBlank()) "বক্স: ${sale.boxCondition}" else ""}
+[${strings.productDetailsSection}]
+${if (isEnglish) "Device:" else "প্রোডাক্ট:"} ${sale.productDetails}
+${strings.imeiLabel} ${sale.imei}
+${if (sale.batteryHealth.isNotBlank()) "${strings.batteryLabel} ${sale.batteryHealth}" else ""}
+${if (sale.boxCondition.isNotBlank()) "${strings.boxLabel} ${sale.boxCondition}" else ""}
 
-[হিসাব বিবরণ]
-বিক্রয় মূল্য: ৳ ${InventoryViewModel.formatBdt(sale.salePrice)}
-পরিশোধিত: ৳ ${InventoryViewModel.formatBdt(sale.paidAmount)}
-বকেয়া / বাকি: ৳ ${InventoryViewModel.formatBdt(sale.dueAmount)}
-পেমেন্ট মাধ্যম: ${sale.paymentMethod}
+[${strings.paymentSummarySection}]
+${strings.totalSalePriceLabel} ${strings.currencySymbol} ${InventoryViewModel.formatAmount(sale.salePrice, lang)}
+${strings.paidLabel} ${strings.currencySymbol} ${InventoryViewModel.formatAmount(sale.paidAmount, lang)}
+${strings.dueLabel} ${strings.currencySymbol} ${InventoryViewModel.formatAmount(sale.dueAmount, lang)}
+${strings.paymentMethodLabel}: ${sale.paymentMethod}
 
-[ওয়ারেন্টি]
+[${strings.warrantySection}]
 ${sale.warrantyInfo}
 
-ধন্যবাদ! আবার আসবেন।
+${if (isEnglish) "Thank you for choosing us!" else "ধন্যবাদ! আবার আসবেন।"}
 ══════════════════════════════
-APPLE AREA BD • নির্ভরযোগ্য স্মার্টফোন পার্টনার
+${shopSettings.shopName} • ${shopSettings.shopPhone}
         """.trimIndent()
 
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
-            putExtra(Intent.EXTRA_SUBJECT, "ক্যাশ মেমো - ${sale.invoiceNumber} - APPLE AREA BD")
+            putExtra(Intent.EXTRA_SUBJECT, "${strings.invoiceTitle} - ${sale.invoiceNumber} - ${shopSettings.shopName}")
             putExtra(Intent.EXTRA_TEXT, invoiceText)
         }
-        context.startActivity(Intent.createChooser(intent, "ক্যাশ মেমো শেয়ার করুন"))
+        context.startActivity(Intent.createChooser(intent, strings.btnShareMemo))
     }
 
     fun callCustomer() {
@@ -233,7 +236,7 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "ইনভয়েস নম্বর: #${sale.invoiceNumber}",
+                                text = "${strings.invoiceNoLabel}: #${sale.invoiceNumber}",
                                 fontSize = 12.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -251,7 +254,7 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                         // Customer Details
                         Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                             Text(
-                                text = "ক্রেতার তথ্য:",
+                                text = strings.customerInfoSection,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = AppleBlue
@@ -262,13 +265,13 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "মোবাইল: ${sale.customerPhone}",
+                                text = "${if (isEnglish) "Phone:" else "মোবাইল:"} ${sale.customerPhone}",
                                 fontSize = 12.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             if (sale.customerAddress.isNotBlank()) {
                                 Text(
-                                    text = "ঠিকানা: ${sale.customerAddress}",
+                                    text = "${if (isEnglish) "Address:" else "ঠিকানা:"} ${sale.customerAddress}",
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
@@ -280,7 +283,7 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                         // Product Details
                         Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                             Text(
-                                text = "পণ্যের বিবরণ:",
+                                text = strings.productDetailsSection,
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = AppleBlue
@@ -291,7 +294,7 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "আইএমইআই: ${sale.imei}",
+                                text = "${strings.imeiLabel} ${sale.imei}",
                                 fontSize = 12.sp,
                                 fontFamily = FontFamily.Monospace,
                                 color = MaterialTheme.colorScheme.onSurface
@@ -302,14 +305,14 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                             ) {
                                 if (sale.batteryHealth.isNotBlank()) {
                                     Text(
-                                        text = "ব্যাটারি: ${sale.batteryHealth}",
+                                        text = "${strings.batteryLabel} ${sale.batteryHealth}",
                                         fontSize = 11.sp,
                                         color = Color(0xFF10B981)
                                     )
                                 }
                                 if (sale.boxCondition.isNotBlank()) {
                                     Text(
-                                        text = "বক্স: ${sale.boxCondition}",
+                                        text = "${strings.boxLabel} ${sale.boxCondition}",
                                         fontSize = 11.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -325,9 +328,9 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(text = "মোট বিক্রয় মূল্য:", fontSize = 13.sp)
+                                Text(text = strings.totalSalePriceLabel, fontSize = 13.sp)
                                 Text(
-                                    text = "৳ ${InventoryViewModel.formatBdt(sale.salePrice)}",
+                                    text = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(sale.salePrice, lang)}",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold
                                 )
@@ -336,9 +339,9 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(text = "পরিশোধিত টাকা:", fontSize = 13.sp)
+                                Text(text = strings.paidLabel, fontSize = 13.sp)
                                 Text(
-                                    text = "৳ ${InventoryViewModel.formatBdt(sale.paidAmount)}",
+                                    text = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(sale.paidAmount, lang)}",
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF10B981)
@@ -350,13 +353,13 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
                                 Text(
-                                    text = "বকেয়া / বাকি:",
+                                    text = strings.dueLabel,
                                     fontSize = 13.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = if (sale.dueAmount > 0) Color(0xFFD97706) else Color(0xFF10B981)
                                 )
                                 Text(
-                                    text = "৳ ${InventoryViewModel.formatBdt(sale.dueAmount)}",
+                                    text = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(sale.dueAmount, lang)}",
                                     fontSize = 14.sp,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = if (sale.dueAmount > 0) Color(0xFFD97706) else Color(0xFF10B981)
@@ -367,7 +370,7 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(text = "পেমেন্ট মাধ্যম:", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(text = "${strings.paymentMethodLabel}:", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(text = sale.paymentMethod, fontSize = 11.sp, fontWeight = FontWeight.Medium)
                             }
                         }
@@ -382,13 +385,13 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                         ) {
                             Column {
                                 Text(
-                                    text = "ওয়ারেন্টি গ্যারান্টি:",
+                                    text = strings.warrantySection,
                                     fontSize = 11.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = AppleBlue
                                 )
                                 Text(
-                                    text = sale.warrantyInfo.ifBlank { "৭ দিনের রিপ্লেসমেন্ট এবং ১ বছর সার্ভিসিং ওয়ারেন্টি" },
+                                    text = sale.warrantyInfo.ifBlank { shopSettings.fullWarrantyText },
                                     fontSize = 11.sp,
                                     color = MaterialTheme.colorScheme.onSurface
                                 )
@@ -404,7 +407,7 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                             verticalAlignment = Alignment.Bottom
                         ) {
                             Text(
-                                text = "বিক্রিত পণ্য ফেরত নেওয়া হয় না।\nওয়ারেন্টির জন্য মেমো আবশ্যক।",
+                                text = strings.memoDisclaimer,
                                 fontSize = 9.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -424,7 +427,7 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                                     )
                                 }
                                 Text(
-                                    text = "APPLE AREA BD\nAuthorized",
+                                    text = "${shopSettings.shopName}\nAuthorized",
                                     fontSize = 8.sp,
                                     textAlign = TextAlign.Center,
                                     fontWeight = FontWeight.Bold,
@@ -454,7 +457,7 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                     ) {
                         Icon(imageVector = Icons.Default.Download, contentDescription = "Download PDF")
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("PDF ডাউনলোড", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text(strings.btnDownloadPdf, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
 
                     Button(
@@ -470,7 +473,7 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                     ) {
                         Icon(imageVector = Icons.Default.Print, contentDescription = "Print Invoice")
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("প্রিন্ট করুন", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                        Text(strings.btnPrint, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                     }
                 }
 
@@ -489,7 +492,7 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                     ) {
                         Icon(imageVector = Icons.Default.Share, contentDescription = "Share", modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("মেমো শেয়ার", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                        Text(strings.btnShareMemo, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                     }
 
                     OutlinedButton(
@@ -502,7 +505,7 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                     ) {
                         Icon(imageVector = Icons.Default.Call, contentDescription = "Call", modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("ক্রেতাকে কল", fontSize = 12.sp)
+                        Text(strings.btnCallCustomer, fontSize = 12.sp)
                     }
                 }
 
@@ -520,7 +523,7 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                 ) {
                     Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit Memo", modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("মেমো ও বিক্রয় তথ্য এডিট বা সংশোধন করুন", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text(strings.btnEditMemo, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
 
                 if (sale.dueAmount > 0) {
@@ -536,7 +539,7 @@ APPLE AREA BD • নির্ভরযোগ্য স্মার্টফো�
                         Icon(imageVector = Icons.Default.Payments, contentDescription = "Collect Due")
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "বকেয়া আদায় করুন (৳ ${InventoryViewModel.formatBdt(sale.dueAmount)})",
+                            text = "${strings.btnCollectDue} (${strings.currencySymbol} ${InventoryViewModel.formatAmount(sale.dueAmount, lang)})",
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White

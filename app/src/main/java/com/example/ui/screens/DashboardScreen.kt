@@ -64,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.data.model.Product
 import com.example.data.model.ProductStatus
+import com.example.ui.LocalAppStrings
 import com.example.ui.theme.AppleBlue
 import com.example.viewmodel.AppTab
 import com.example.viewmodel.DashboardMetrics
@@ -86,7 +87,10 @@ fun DashboardScreen(
     onEditProduct: (Product) -> Unit,
     onDeleteProduct: (Product) -> Unit
 ) {
-    val currentDateStr = SimpleDateFormat("EEEE, dd MMMM yyyy", Locale("bn", "BD")).format(Date())
+    val strings = LocalAppStrings.current
+    val isEnglish = strings.tabDashboard == "Dashboard"
+    val dateLocale = if (isEnglish) Locale.US else Locale("bn", "BD")
+    val currentDateStr = SimpleDateFormat("EEEE, dd MMMM yyyy", dateLocale).format(Date())
 
     LazyColumn(
         modifier = Modifier
@@ -115,7 +119,7 @@ fun DashboardScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
                             painter = painterResource(id = R.drawable.shop_logo),
-                            contentDescription = "Apple Area BD Logo",
+                            contentDescription = "Zafrin Electronics Logo",
                             modifier = Modifier
                                 .height(48.dp)
                                 .width(80.dp)
@@ -125,7 +129,7 @@ fun DashboardScreen(
 
                         Column {
                             Text(
-                                text = "APPLE AREA BD",
+                                text = strings.appTitle,
                                 fontSize = 19.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = MaterialTheme.colorScheme.onSurface,
@@ -156,7 +160,7 @@ fun DashboardScreen(
                             )
                             Spacer(modifier = Modifier.width(5.dp))
                             Text(
-                                text = "অফলাইন রেডি",
+                                text = if (isEnglish) "Offline Ready" else "অফলাইন রেডি",
                                 color = Color(0xFF059669),
                                 fontSize = 10.sp,
                                 fontWeight = FontWeight.Bold
@@ -175,18 +179,18 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     MetricCard(
-                        title = "ইন স্টক পণ্য",
-                        value = "${metrics.inStockCount} টি",
-                        subtitle = "স্টক মূল্য: ৳ ${InventoryViewModel.formatBdt(metrics.totalStockValue)}",
+                        title = strings.metricInStock,
+                        value = "${metrics.inStockCount} ${if (isEnglish) "Units" else "টি"}",
+                        subtitle = "${strings.purchaseCostLabel} ${strings.currencySymbol} ${InventoryViewModel.formatAmount(metrics.totalStockValue, if (isEnglish) "EN" else "BN")}",
                         icon = Icons.Default.Inventory2,
                         accentColor = AppleBlue,
                         modifier = Modifier.weight(1f)
                     )
 
                     MetricCard(
-                        title = "মোট বিক্রয়",
-                        value = "${metrics.totalSalesCount} টি",
-                        subtitle = "রেভিনিউ: ৳ ${InventoryViewModel.formatBdt(metrics.totalRevenue)}",
+                        title = strings.metricRevenue,
+                        value = "${metrics.totalSalesCount} ${if (isEnglish) "Sold" else "টি"}",
+                        subtitle = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(metrics.totalRevenue, if (isEnglish) "EN" else "BN")}",
                         icon = Icons.Default.PointOfSale,
                         accentColor = Color(0xFF8B5CF6),
                         modifier = Modifier.weight(1f)
@@ -198,18 +202,18 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     MetricCard(
-                        title = "মোট নিট লাভ",
-                        value = "৳ ${InventoryViewModel.formatBdt(metrics.totalProfit)}",
-                        subtitle = "বিক্রি - কেনা খরচ",
+                        title = strings.metricProfit,
+                        value = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(metrics.totalProfit, if (isEnglish) "EN" else "BN")}",
+                        subtitle = if (isEnglish) "Revenue - Cost" else "বিক্রি - কেনা খরচ",
                         icon = Icons.Default.TrendingUp,
                         accentColor = Color(0xFF10B981),
                         modifier = Modifier.weight(1f)
                     )
 
                     MetricCard(
-                        title = "বকেয়া বাকি",
-                        value = "৳ ${InventoryViewModel.formatBdt(metrics.totalDue)}",
-                        subtitle = if (metrics.totalDue > 0) "আদায় বাকি আছে" else "কোনো বকেয়া নেই",
+                        title = strings.metricDue,
+                        value = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(metrics.totalDue, if (isEnglish) "EN" else "BN")}",
+                        subtitle = if (metrics.totalDue > 0) (if (isEnglish) "Pending payment" else "আদায় বাকি আছে") else (if (isEnglish) "No due balance" else "কোনো বকেয়া নেই"),
                         icon = Icons.Default.LocalAtm,
                         accentColor = if (metrics.totalDue > 0) Color(0xFFF59E0B) else Color(0xFF64748B),
                         modifier = Modifier.weight(1f)
@@ -235,7 +239,7 @@ fun DashboardScreen(
                 ) {
                     Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("পণ্য যোগ", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Text(strings.actionAddStock, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 }
 
                 Button(
@@ -252,7 +256,7 @@ fun DashboardScreen(
                 ) {
                     Icon(imageVector = Icons.Default.QrCodeScanner, contentDescription = "Scan", tint = AppleBlue)
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("আইএমইআই স্ক্যান", fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
+                    Text(strings.actionScanBarcode, fontSize = 12.sp, fontWeight = FontWeight.SemiBold)
                 }
             }
         }
@@ -262,7 +266,7 @@ fun DashboardScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = onSearchChange,
-                placeholder = { Text("মডেল, আইএমইআই, কালার দিয়ে খুঁজুন...", fontSize = 13.sp) },
+                placeholder = { Text(strings.searchPlaceholder, fontSize = 13.sp) },
                 leadingIcon = {
                     Icon(imageVector = Icons.Default.Search, contentDescription = "Search", tint = AppleBlue)
                 },
@@ -286,13 +290,13 @@ fun DashboardScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "স্টকে থাকা মোবাইল ফোন (${products.count { it.status == ProductStatus.IN_STOCK.name }} টি)",
+                    text = "${strings.recentStockHeader} (${products.count { it.status == ProductStatus.IN_STOCK.name }})",
                     fontSize = 15.sp,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = "সকল দেখুন >",
+                    text = "${strings.viewAll} >",
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = AppleBlue,
@@ -327,7 +331,7 @@ fun DashboardScreen(
                         )
                         Spacer(modifier = Modifier.height(10.dp))
                         Text(
-                            text = "কোনো পণ্য খুঁজে পাওয়া যায়নি",
+                            text = strings.noProducts,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Medium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -421,6 +425,10 @@ fun ProductItemCard(
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit
 ) {
+    val strings = com.example.ui.LocalAppStrings.current
+    val isEnglish = strings.tabDashboard == "Dashboard"
+    val lang = if (isEnglish) "EN" else "BN"
+
     ElevatedCard(
         modifier = Modifier
             .fillMaxWidth()
@@ -465,7 +473,7 @@ fun ProductItemCard(
                     color = if (product.status == ProductStatus.IN_STOCK.name) Color(0xFFD1FAE5) else Color(0xFFE2E8F0)
                 ) {
                     Text(
-                        text = if (product.status == ProductStatus.IN_STOCK.name) "ইন স্টক" else "বিক্রিত",
+                        text = if (product.status == ProductStatus.IN_STOCK.name) strings.statusInStock else strings.statusSold,
                         color = if (product.status == ProductStatus.IN_STOCK.name) Color(0xFF065F46) else Color(0xFF475569),
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
@@ -490,13 +498,13 @@ fun ProductItemCard(
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "IMEI: ${product.imei}",
+                    text = "${strings.imeiLabel} ${product.imei}",
                     fontSize = 11.sp,
                     fontFamily = FontFamily.Monospace,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "সাপ্লায়ার: ${product.supplier}",
+                    text = "${strings.supplierLabel} ${product.supplier}",
                     fontSize = 11.sp,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -512,18 +520,18 @@ fun ProductItemCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text(text = "কেনা মূল্য:", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(text = strings.purchaseCostLabel, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(
-                        text = "৳ ${InventoryViewModel.formatBdt(product.purchasePrice)}",
+                        text = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(product.purchasePrice, lang)}",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.SemiBold
                     )
                 }
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "বিক্রয় মূল্য:", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(text = strings.targetPriceLabel, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(
-                        text = "৳ ${InventoryViewModel.formatBdt(product.targetSalePrice)}",
+                        text = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(product.targetSalePrice, lang)}",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = AppleBlue
@@ -532,9 +540,9 @@ fun ProductItemCard(
 
                 Column(horizontalAlignment = Alignment.End) {
                     val profit = product.targetSalePrice - product.purchasePrice
-                    Text(text = "সম্ভাব্য লাভ:", fontSize = 10.sp, color = Color(0xFF059669))
+                    Text(text = strings.potentialProfitLabel, fontSize = 10.sp, color = Color(0xFF059669))
                     Text(
-                        text = "+৳ ${InventoryViewModel.formatBdt(profit)}",
+                        text = "+${strings.currencySymbol} ${InventoryViewModel.formatAmount(profit, lang)}",
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF059669)
@@ -560,7 +568,7 @@ fun ProductItemCard(
                     ) {
                         Icon(imageVector = Icons.Default.PointOfSale, contentDescription = "Sell", modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("বিক্রি করুন", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(strings.btnSell, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
                 }
 
@@ -573,7 +581,7 @@ fun ProductItemCard(
                 ) {
                     Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("এডিট", fontSize = 12.sp)
+                    Text(strings.btnEdit, fontSize = 12.sp)
                 }
 
                 IconButton(

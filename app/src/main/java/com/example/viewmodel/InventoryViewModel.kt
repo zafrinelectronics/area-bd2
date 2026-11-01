@@ -484,9 +484,14 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     companion object {
-        fun formatBdt(amount: Double): String {
-            val format = NumberFormat.getNumberInstance(Locale("bn", "BD"))
+        fun formatAmount(amount: Double, language: String = "BN"): String {
+            val locale = if (language.equals("EN", ignoreCase = true)) Locale.US else Locale("bn", "BD")
+            val format = NumberFormat.getNumberInstance(locale)
             return format.format(amount.toLong())
+        }
+
+        fun formatBdt(amount: Double): String {
+            return formatAmount(amount, "BN")
         }
     }
 }

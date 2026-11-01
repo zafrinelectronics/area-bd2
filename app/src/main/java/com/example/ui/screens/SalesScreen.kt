@@ -73,6 +73,10 @@ fun SalesScreen(
     onEditSale: (Sale) -> Unit = {}
 ) {
     val context = LocalContext.current
+    val strings = com.example.ui.LocalAppStrings.current
+    val isEnglish = strings.tabDashboard == "Dashboard"
+    val lang = if (isEnglish) "EN" else "BN"
+
     var searchQuery by remember { mutableStateOf("") }
     var showOnlyDue by remember { mutableStateOf(false) }
 
@@ -105,7 +109,7 @@ fun SalesScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("ক্রেতার নাম, ফোন নম্বর, ইনভয়েস দিয়ে খুঁজুন...", fontSize = 13.sp) },
+                placeholder = { Text(strings.invoiceSearchPlaceholder, fontSize = 13.sp) },
                 leadingIcon = {
                     Icon(imageVector = Icons.Default.Search, contentDescription = "Search", tint = AppleBlue)
                 },
@@ -139,7 +143,7 @@ fun SalesScreen(
                     FilterChip(
                         selected = !showOnlyDue,
                         onClick = { showOnlyDue = false },
-                        label = { Text("সকল বিক্রি ($totalSalesCount)", fontSize = 12.sp) },
+                        label = { Text("${if (isEnglish) "All Sales" else "সকল বিক্রি"} ($totalSalesCount)", fontSize = 12.sp) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = AppleBlue,
                             selectedLabelColor = Color.White
@@ -151,7 +155,7 @@ fun SalesScreen(
                         onClick = { showOnlyDue = true },
                         label = {
                             Text(
-                                "বকেয়া বিক্রি (${sales.count { it.dueAmount > 0 }})",
+                                "${if (isEnglish) "Due Sales" else "বকেয়া বিক্রি"} (${sales.count { it.dueAmount > 0 }})",
                                 fontSize = 12.sp
                             )
                         },
@@ -179,9 +183,9 @@ fun SalesScreen(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column {
-                        Text(text = "মোট বিক্রয় মূল্য:", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(text = strings.reportTotalRevenue, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         Text(
-                            text = "৳ ${InventoryViewModel.formatBdt(totalRevenue)}",
+                            text = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(totalRevenue, lang)}",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface
@@ -189,9 +193,9 @@ fun SalesScreen(
                     }
 
                     Column(horizontalAlignment = Alignment.End) {
-                        Text(text = "মোট বকেয়া:", fontSize = 11.sp, color = Color(0xFFD97706))
+                        Text(text = strings.reportTotalDue, fontSize = 11.sp, color = Color(0xFFD97706))
                         Text(
-                            text = "৳ ${InventoryViewModel.formatBdt(totalDue)}",
+                            text = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(totalDue, lang)}",
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color(0xFFD97706)
@@ -222,7 +226,7 @@ fun SalesScreen(
                         )
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "কোনো বিক্রয় রেকর্ড পাওয়া যায়নি",
+                            text = strings.noSalesRecorded,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -260,7 +264,10 @@ fun SaleItemCard(
     onCallCustomer: () -> Unit,
     onEditSale: () -> Unit = {}
 ) {
-    val dateStr = SimpleDateFormat("dd MMM yyyy, hh:mm a", Locale("bn", "BD")).format(Date(sale.soldAt))
+    val strings = com.example.ui.LocalAppStrings.current
+    val isEnglish = strings.tabDashboard == "Dashboard"
+    val lang = if (isEnglish) "EN" else "BN"
+    val dateStr = SimpleDateFormat("dd MMM yyyy, hh:mm a", if (isEnglish) Locale.US else Locale("bn", "BD")).format(Date(sale.soldAt))
 
     ElevatedCard(
         modifier = Modifier
@@ -323,7 +330,7 @@ fun SaleItemCard(
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = "মোবাইল: ${sale.customerPhone}",
+                        text = "${if (isEnglish) "Phone:" else "মোবাইল:"} ${sale.customerPhone}",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -373,18 +380,18 @@ fun SaleItemCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Column {
-                    Text(text = "বিক্রয় মূল্য:", fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(text = strings.totalSalePriceLabel, fontSize = 10.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(
-                        text = "৳ ${InventoryViewModel.formatBdt(sale.salePrice)}",
+                        text = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(sale.salePrice, lang)}",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold
                     )
                 }
 
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text(text = "পরিশোধিত:", fontSize = 10.sp, color = Color(0xFF10B981))
+                    Text(text = strings.paidLabel, fontSize = 10.sp, color = Color(0xFF10B981))
                     Text(
-                        text = "৳ ${InventoryViewModel.formatBdt(sale.paidAmount)}",
+                        text = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(sale.paidAmount, lang)}",
                         fontSize = 13.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color(0xFF10B981)
@@ -393,12 +400,12 @@ fun SaleItemCard(
 
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = if (sale.dueAmount > 0) "বকেয়া:" else "পরিশোধিত",
+                        text = if (sale.dueAmount > 0) strings.dueLabel else (if (isEnglish) "Paid" else "পরিশোধিত"),
                         fontSize = 10.sp,
                         color = if (sale.dueAmount > 0) Color(0xFFD97706) else Color(0xFF10B981)
                     )
                     Text(
-                        text = "৳ ${InventoryViewModel.formatBdt(sale.dueAmount)}",
+                        text = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(sale.dueAmount, lang)}",
                         fontSize = 14.sp,
                         fontWeight = FontWeight.ExtraBold,
                         color = if (sale.dueAmount > 0) Color(0xFFD97706) else Color(0xFF10B981)
@@ -422,7 +429,7 @@ fun SaleItemCard(
                 ) {
                     Icon(imageVector = Icons.Default.ReceiptLong, contentDescription = "Invoice", modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("ক্যাশ মেমো", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text(if (isEnglish) "Cash Memo" else "ক্যাশ মেমো", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
 
                 OutlinedButton(
@@ -434,7 +441,7 @@ fun SaleItemCard(
                 ) {
                     Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text("এডিট", fontSize = 12.sp)
+                    Text(strings.btnEdit, fontSize = 12.sp)
                 }
 
                 if (sale.dueAmount > 0) {
@@ -447,7 +454,7 @@ fun SaleItemCard(
                     ) {
                         Icon(imageVector = Icons.Default.Payments, contentDescription = "Due", modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("বকেয়া আদায়", fontSize = 12.sp, color = Color(0xFFD97706))
+                        Text(if (isEnglish) "Collect Due" else "বকেয়া আদায়", fontSize = 12.sp, color = Color(0xFFD97706))
                     }
                 }
             }

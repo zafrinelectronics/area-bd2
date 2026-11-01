@@ -70,6 +70,10 @@ fun StockScreen(
     onEditProduct: (Product) -> Unit,
     onDeleteProduct: (Product) -> Unit
 ) {
+    val strings = com.example.ui.LocalAppStrings.current
+    val isEnglish = strings.tabDashboard == "Dashboard"
+    val lang = if (isEnglish) "EN" else "BN"
+
     val brands = listOf("ALL", "Apple", "Samsung", "Google", "Xiaomi", "OnePlus")
     val inStockCount = products.count { it.status == ProductStatus.IN_STOCK.name }
     val inStockValue = products.filter { it.status == ProductStatus.IN_STOCK.name }.sumOf { it.purchasePrice }
@@ -89,7 +93,7 @@ fun StockScreen(
                 ) {
                     Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("পণ্য যোগ", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text(strings.actionAddStock, fontWeight = FontWeight.Bold, fontSize = 13.sp)
                 }
             }
         }
@@ -112,7 +116,7 @@ fun StockScreen(
                     OutlinedTextField(
                         value = searchQuery,
                         onValueChange = onSearchChange,
-                        placeholder = { Text("মডেল, আইএমইআই, কালার...", fontSize = 13.sp) },
+                        placeholder = { Text(strings.searchPlaceholder, fontSize = 13.sp) },
                         leadingIcon = {
                             Icon(imageVector = Icons.Default.Search, contentDescription = "Search", tint = AppleBlue)
                         },
@@ -155,7 +159,7 @@ fun StockScreen(
                     FilterChip(
                         selected = selectedStatusFilter == "ALL",
                         onClick = { onStatusFilterChange("ALL") },
-                        label = { Text("সকল (${products.size})", fontSize = 12.sp) },
+                        label = { Text("${strings.filterAll} (${products.size})", fontSize = 12.sp) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = AppleBlue,
                             selectedLabelColor = Color.White
@@ -165,7 +169,7 @@ fun StockScreen(
                     FilterChip(
                         selected = selectedStatusFilter == "IN_STOCK",
                         onClick = { onStatusFilterChange("IN_STOCK") },
-                        label = { Text("ইন স্টক ($inStockCount)", fontSize = 12.sp) },
+                        label = { Text("${strings.filterInStock} ($inStockCount)", fontSize = 12.sp) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = Color(0xFF10B981),
                             selectedLabelColor = Color.White
@@ -175,7 +179,7 @@ fun StockScreen(
                     FilterChip(
                         selected = selectedStatusFilter == "SOLD",
                         onClick = { onStatusFilterChange("SOLD") },
-                        label = { Text("বিক্রিত (${products.count { it.status == ProductStatus.SOLD.name }})", fontSize = 12.sp) },
+                        label = { Text("${strings.filterSold} (${products.count { it.status == ProductStatus.SOLD.name }})", fontSize = 12.sp) },
                         colors = FilterChipDefaults.filterChipColors(
                             selectedContainerColor = Color(0xFF64748B),
                             selectedLabelColor = Color.White
@@ -191,7 +195,7 @@ fun StockScreen(
                 ) {
                     items(brands) { brand ->
                         val isSelected = selectedBrandFilter == brand
-                        val label = if (brand == "ALL") "সব ব্র্যান্ড" else brand
+                        val label = if (brand == "ALL") strings.allBrandsLabel else brand
                         FilterChip(
                             selected = isSelected,
                             onClick = { onBrandFilterChange(brand) },
@@ -220,12 +224,12 @@ fun StockScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "মোট স্টক: $inStockCount টি ইউনিট",
+                            text = "${strings.totalUnitsLabel} $inStockCount",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "বর্তমান স্টক ভ্যালু: ৳ ${InventoryViewModel.formatBdt(inStockValue)}",
+                            text = "${strings.currentStockValueLabel} ${strings.currencySymbol} ${InventoryViewModel.formatAmount(inStockValue, lang)}",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = AppleBlue
@@ -256,7 +260,7 @@ fun StockScreen(
                             )
                             Spacer(modifier = Modifier.height(12.dp))
                             Text(
-                                text = "কোনো পণ্য পাওয়া যায়নি",
+                                text = strings.noProducts,
                                 fontSize = 15.sp,
                                 fontWeight = FontWeight.SemiBold
                             )
@@ -266,7 +270,7 @@ fun StockScreen(
                                 colors = ButtonDefaults.buttonColors(containerColor = AppleBlue),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text("নতুন পণ্য যোগ করুন")
+                                Text(strings.actionAddStock)
                             }
                         }
                     }

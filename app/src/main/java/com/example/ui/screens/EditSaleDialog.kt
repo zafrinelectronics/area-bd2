@@ -73,13 +73,17 @@ fun EditSaleDialog(
     val paidAmount = paidAmountStr.toDoubleOrNull() ?: sale.paidAmount
     val dueAmount = (salePrice - paidAmount).coerceAtLeast(0.0)
 
+    val strings = com.example.ui.LocalAppStrings.current
+    val isEnglish = strings.tabDashboard == "Dashboard"
+    val lang = if (isEnglish) "EN" else "BN"
+
     if (showDeleteConfirm) {
         AlertDialog(
             onDismissRequest = { showDeleteConfirm = false },
-            title = { Text("বিক্রয় মেমো মুছে ফেলতে চান?", fontWeight = FontWeight.Bold) },
+            title = { Text(if (isEnglish) "Delete sale memo?" else "বিক্রয় মেমো মুছে ফেলতে চান?", fontWeight = FontWeight.Bold) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text("ইনভয়েস #${sale.invoiceNumber} এবং এই বিক্রয়ের যাবতীয় হিসাব মুছে যাবে।")
+                    Text(if (isEnglish) "Invoice #${sale.invoiceNumber} and its transaction will be removed." else "ইনভয়েস #${sale.invoiceNumber} এবং এই বিক্রয়ের যাবতীয় হিসাব মুছে যাবে।")
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(top = 4.dp)
@@ -89,7 +93,7 @@ fun EditSaleDialog(
                             onCheckedChange = { restoreStockChecked = it }
                         )
                         Spacer(modifier = Modifier.width(6.dp))
-                        Text("ডিভাইসটি আবার ইন স্টকে (In Stock) ফেরত আনুন", fontSize = 13.sp)
+                        Text(if (isEnglish) "Restore device back into In-Stock inventory" else "ডিভাইসটি আবার ইন স্টকে (In Stock) ফেরত আনুন", fontSize = 13.sp)
                     }
                 }
             },
@@ -101,12 +105,12 @@ fun EditSaleDialog(
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFEF4444))
                 ) {
-                    Text("হ্যাঁ, ডিলিট করুন")
+                    Text(if (isEnglish) "Yes, Delete" else "হ্যাঁ, ডিলিট করুন")
                 }
             },
             dismissButton = {
                 OutlinedButton(onClick = { showDeleteConfirm = false }) {
-                    Text("বাতিল")
+                    Text(strings.cancel)
                 }
             }
         )
@@ -319,7 +323,7 @@ fun EditSaleDialog(
                 ) {
                     Icon(imageVector = Icons.Default.Save, contentDescription = "Save")
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("মেমো আপডেট করুন", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text(if (isEnglish) "Update Memo & Sale" else "মেমো আপডেট করুন", fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
 
                 OutlinedButton(
@@ -333,7 +337,7 @@ fun EditSaleDialog(
                 ) {
                     Icon(imageVector = Icons.Default.Delete, contentDescription = "Delete")
                     Spacer(modifier = Modifier.width(6.dp))
-                    Text("এই বিক্রয় মেমো ডিলিট করুন", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                    Text(if (isEnglish) "Delete This Sale Memo" else "এই বিক্রয় মেমো ডিলিট করুন", fontSize = 13.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }

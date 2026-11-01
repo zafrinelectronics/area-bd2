@@ -46,6 +46,10 @@ fun DuePaymentDialog(
     onDismiss: () -> Unit,
     onPaymentConfirmed: (additionalAmount: Double) -> Unit
 ) {
+    val strings = com.example.ui.LocalAppStrings.current
+    val isEnglish = strings.tabDashboard == "Dashboard"
+    val lang = if (isEnglish) "EN" else "BN"
+
     var paymentAmountStr by remember { mutableStateOf(sale.dueAmount.toLong().toString()) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
 
@@ -65,7 +69,7 @@ fun DuePaymentDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "বকেয়া টাকা জমা গ্রহণ",
+                        text = strings.duePaymentDialogTitle,
                         fontSize = 17.sp,
                         fontWeight = FontWeight.Bold
                     )
@@ -84,17 +88,17 @@ fun DuePaymentDialog(
                         verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
                         Text(
-                            text = "ক্রেতা: ${sale.customerName}",
+                            text = "${if (isEnglish) "Customer:" else "ক্রেতা:"} ${sale.customerName}",
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp
                         )
                         Text(
-                            text = "ডিভাইস: ${sale.productDetails}",
+                            text = "${if (isEnglish) "Device:" else "ডিভাইস:"} ${sale.productDetails}",
                             fontSize = 12.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
-                            text = "বর্তমান বকেয়া: ৳ ${InventoryViewModel.formatBdt(sale.dueAmount)}",
+                            text = "${strings.totalDueNowLabel} ${strings.currencySymbol} ${InventoryViewModel.formatAmount(sale.dueAmount, lang)}",
                             fontWeight = FontWeight.Bold,
                             fontSize = 14.sp,
                             color = Color(0xFFD97706)
@@ -105,7 +109,7 @@ fun DuePaymentDialog(
                 OutlinedTextField(
                     value = paymentAmountStr,
                     onValueChange = { paymentAmountStr = it },
-                    label = { Text("জমা গ্রহণের পরিমাণ (৳)") },
+                    label = { Text(strings.amountToPayLabel) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
                     modifier = Modifier
@@ -126,11 +130,11 @@ fun DuePaymentDialog(
                     onClick = {
                         val amount = paymentAmountStr.toDoubleOrNull()
                         if (amount == null || amount <= 0) {
-                            errorMessage = "সঠিক টাকার পরিমাণ লিখুন।"
+                            errorMessage = if (isEnglish) "Please enter a valid amount." else "সঠিক টাকার পরিমাণ লিখুন।"
                             return@Button
                         }
                         if (amount > sale.dueAmount) {
-                            errorMessage = "টাকার পরিমাণ বকেয়া পরিমাণের চেয়ে বেশি হতে পারে না।"
+                            errorMessage = if (isEnglish) "Amount cannot exceed current due balance." else "টাকার পরিমাণ বকেয়া পরিমাণের চেয়ে বেশি হতে পারে না।"
                             return@Button
                         }
                         errorMessage = null
@@ -145,7 +149,7 @@ fun DuePaymentDialog(
                 ) {
                     Icon(imageVector = Icons.Default.Payments, contentDescription = "Confirm")
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("জমা কনফার্ম করুন", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text(strings.btnConfirmDuePayment, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }

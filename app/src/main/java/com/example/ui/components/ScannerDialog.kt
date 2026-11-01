@@ -149,6 +149,9 @@ fun ScannerDialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
     ) {
+        val strings = com.example.ui.LocalAppStrings.current
+        val isEnglish = strings.tabDashboard == "Dashboard"
+
         Surface(
             modifier = Modifier
                 .fillMaxSize()
@@ -179,13 +182,13 @@ fun ScannerDialog(
 
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(
-                            text = "লাইভ ক্যামেরা স্ক্যানার",
+                            text = strings.scannerTitle,
                             color = Color.White,
                             fontSize = 17.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "IMEI / Barcode / QR Scanner",
+                            text = strings.scannerSubtitle,
                             color = Color.White.copy(alpha = 0.6f),
                             fontSize = 11.sp
                         )
@@ -330,7 +333,7 @@ fun ScannerDialog(
                         color = Color.Black.copy(alpha = 0.6f)
                     ) {
                         Text(
-                            text = "বারকোড বা আইএমইআই ফ্রেমে ধরুন",
+                            text = strings.scannerFrameHint,
                             color = Color.White.copy(alpha = 0.9f),
                             fontSize = 11.sp,
                             modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
@@ -349,7 +352,7 @@ fun ScannerDialog(
                         verticalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Text(
-                            text = "ম্যানুয়ালি আইএমইআই লিখুন বা অটো তৈরি করুন:",
+                            text = strings.scannerManualTitle,
                             color = Color.White,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.SemiBold
@@ -358,7 +361,7 @@ fun ScannerDialog(
                         OutlinedTextField(
                             value = manualImei,
                             onValueChange = { manualImei = it },
-                            placeholder = { Text("১৫ সংখ্যার IMEI নম্বর লিখুন", fontSize = 13.sp) },
+                            placeholder = { Text(strings.scannerManualPlaceholder, fontSize = 13.sp) },
                             singleLine = true,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -393,7 +396,7 @@ fun ScannerDialog(
                                 shape = RoundedCornerShape(12.dp),
                                 enabled = manualImei.isNotBlank()
                             ) {
-                                Text("কনফার্ম", fontSize = 13.sp, fontWeight = FontWeight.Bold)
+                                Text(strings.btnConfirmImei, fontSize = 13.sp, fontWeight = FontWeight.Bold)
                             }
 
                             Button(
@@ -410,7 +413,7 @@ fun ScannerDialog(
                                 colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF334155)),
                                 shape = RoundedCornerShape(12.dp)
                             ) {
-                                Text("অটো জেনারেট", fontSize = 13.sp, color = Color.White)
+                                Text(strings.btnAutoGenImei, fontSize = 13.sp, color = Color.White)
                             }
                         }
                     }

@@ -53,7 +53,7 @@ object PdfInvoiceGenerator {
 
     private fun drawInvoiceCanvas(canvas: Canvas, sale: Sale, shopSettings: ShopSettings) {
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-        val dateFormat = SimpleDateFormat("dd MMMM, yyyy - hh:mm a", Locale("bn", "BD"))
+        val dateFormat = SimpleDateFormat("dd MMMM, yyyy - hh:mm a", if (shopSettings.appLanguage == "EN") Locale.US else Locale("bn", "BD"))
         val dateString = dateFormat.format(Date(sale.soldAt))
 
         // Background canvas fill (pure white)
@@ -385,7 +385,7 @@ object PdfInvoiceGenerator {
             }
         }
 
-        val printJobName = "Apple_Area_BD_Memo_${sale.invoiceNumber}"
+        val printJobName = "${shopSettings.shopName.replace(" ", "_")}_Memo_${sale.invoiceNumber}"
         val printAttributes = PrintAttributes.Builder()
             .setMediaSize(PrintAttributes.MediaSize.ISO_A4)
             .setColorMode(PrintAttributes.COLOR_MODE_COLOR)

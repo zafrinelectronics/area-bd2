@@ -14,8 +14,9 @@ class SettingsManager(context: Context) {
     val settings: StateFlow<ShopSettings> = _settings.asStateFlow()
 
     private fun loadSettings(): ShopSettings {
-        val shopName = prefs.getString("shop_name", "APPLE AREA BD") ?: "APPLE AREA BD"
-        val shopTagline = prefs.getString("shop_tagline", "এক্সক্লুসিভ স্মার্টফোন ও গ্যাজেট শপ") ?: "এক্সক্লুসিভ স্মার্টফোন ও গ্যাজেট শপ"
+        val appLanguage = prefs.getString("app_language", "BN") ?: "BN"
+        val shopName = prefs.getString("shop_name", "Zafrin Electronics") ?: "Zafrin Electronics"
+        val shopTagline = prefs.getString("shop_tagline", "এক্সক্লুসিভ স্মার্টফোন ও ইলেকট্রনিক্স শপ") ?: "এক্সক্লুসিভ স্মার্টফোন ও ইলেকট্রনিক্স শপ"
         val shopPhone = prefs.getString("shop_phone", "01711223344") ?: "01711223344"
         val shopAddress = prefs.getString("shop_address", "ঢাকা, বাংলাদেশ") ?: "ঢাকা, বাংলাদেশ"
 
@@ -35,6 +36,7 @@ class SettingsManager(context: Context) {
         val payments = loadList("presets_payments", listOf("ক্যাশ (Cash)", "বিকাশ (bKash)", "নগদ (Nagad)", "ব্যাংক কার্ড", "ক্যাশ + বিকাশ"))
 
         return ShopSettings(
+            appLanguage = appLanguage,
             shopName = shopName,
             shopTagline = shopTagline,
             shopPhone = shopPhone,
@@ -63,6 +65,7 @@ class SettingsManager(context: Context) {
 
     fun saveSettings(newSettings: ShopSettings) {
         prefs.edit()
+            .putString("app_language", newSettings.appLanguage)
             .putString("shop_name", newSettings.shopName)
             .putString("shop_tagline", newSettings.shopTagline)
             .putString("shop_phone", newSettings.shopPhone)

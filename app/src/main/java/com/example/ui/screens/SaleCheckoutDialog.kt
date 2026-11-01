@@ -89,6 +89,10 @@ fun SaleCheckoutDialog(
     val dueAmount = (salePrice - paidAmount).coerceAtLeast(0.0)
     val estimatedProfit = salePrice - product.purchasePrice
 
+    val strings = com.example.ui.LocalAppStrings.current
+    val isEnglish = strings.tabDashboard == "Dashboard"
+    val lang = if (isEnglish) "EN" else "BN"
+
     Dialog(
         onDismissRequest = onDismiss,
         properties = DialogProperties(usePlatformDefaultWidth = false)
@@ -128,12 +132,12 @@ fun SaleCheckoutDialog(
                         Spacer(modifier = Modifier.width(10.dp))
                         Column {
                             Text(
-                                text = "পণ্য বিক্রয় ও ইনভয়েস",
+                                text = strings.checkoutTitle,
                                 fontSize = 17.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "APPLE AREA BD • ক্যাশ মেমো এন্ট্রি",
+                                text = "${strings.appTitle} • ${strings.invoiceTitle}",
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -388,15 +392,15 @@ fun SaleCheckoutDialog(
                 Button(
                     onClick = {
                         if (customerName.isBlank()) {
-                            validationError = "ক্রেতার নাম প্রদান করুন।"
+                            validationError = if (isEnglish) "Please enter customer name." else "ক্রেতার নাম প্রদান করুন।"
                             return@Button
                         }
                         if (customerPhone.isBlank()) {
-                            validationError = "ক্রেতার মোবাইল নম্বর প্রদান করুন।"
+                            validationError = if (isEnglish) "Please enter customer phone number." else "ক্রেতার মোবাইল নম্বর প্রদান করুন।"
                             return@Button
                         }
                         if (salePrice <= 0) {
-                            validationError = "সঠিক বিক্রয় মূল্য লিখুন।"
+                            validationError = if (isEnglish) "Please enter a valid sale price." else "সঠিক বিক্রয় মূল্য লিখুন।"
                             return@Button
                         }
                         validationError = null
@@ -420,7 +424,7 @@ fun SaleCheckoutDialog(
                 ) {
                     Icon(imageVector = Icons.Default.PointOfSale, contentDescription = "Sell")
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("বিক্রি সম্পন্ন ও ইনভয়েস তৈরি করুন", fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                    Text(strings.btnCompleteSale, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }

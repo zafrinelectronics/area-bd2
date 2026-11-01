@@ -22,6 +22,6 @@ dependencyResolutionManagement {
   }
 }
 
-rootProject.name = "Apple Area BD"
+rootProject.name = "Zafrin Electronics"
 
 include(":app")

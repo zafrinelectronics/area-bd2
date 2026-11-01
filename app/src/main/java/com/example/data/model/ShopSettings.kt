@@ -1,8 +1,9 @@
 package com.example.data.model
 
 data class ShopSettings(
-    val shopName: String = "APPLE AREA BD",
-    val shopTagline: String = "এক্সক্লুসিভ স্মার্টফোন ও গ্যাজেট শপ",
+    val appLanguage: String = "BN", // "BN" (বাংলা) or "EN" (English)
+    val shopName: String = "Zafrin Electronics",
+    val shopTagline: String = "এক্সক্লুসিভ স্মার্টফোন ও ইলেকট্রনিক্স শপ",
     val shopPhone: String = "01700000000",
     val shopAddress: String = "ঢাকা, বাংলাদেশ",
     val warrantyReplacement: String = "7 Days Replacement Guarantee Without physical Damage & Touch Display.",

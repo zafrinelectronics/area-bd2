@@ -122,18 +122,21 @@ fun AddEditProductScreen(
         )
     }
 
+    val strings = com.example.ui.LocalAppStrings.current
+    val isEnglish = strings.tabDashboard == "Dashboard"
+
     Scaffold(
         topBar = {
             TopAppBar(
                 title = {
                     Column {
                         Text(
-                            text = if (editingProduct == null) "স্টকে নতুন প্রোডাক্ট এন্ট্রি" else "প্রোডাক্ট তথ্য এডিট করুন",
+                            text = if (editingProduct == null) strings.addProductTitle else strings.editProductTitle,
                             fontSize = 17.sp,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
-                            text = "APPLE AREA BD • স্টক ম্যানেজমেন্ট",
+                            text = "${strings.appTitle} • ${strings.productFormSubtitle}",
                             fontSize = 11.sp,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -182,13 +185,13 @@ fun AddEditProductScreen(
                         Spacer(modifier = Modifier.width(12.dp))
                         Column {
                             Text(
-                                text = "প্রোডাক্ট ইনফরমেশন পূরণ করুন",
+                                text = if (isEnglish) "Fill Product Information" else "প্রোডাক্ট ইনফরমেশন পূরণ করুন",
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 14.sp,
                                 color = AppleBlue
                             )
                             Text(
-                                text = "কোম্পানি > মডেল > ভ্যারিয়েন্ট > কালার > ব্যাটারি > বক্স > সাপ্লায়ার > মূল্য",
+                                text = if (isEnglish) "Company > Model > Variant > Color > Battery > Box > Supplier > Price" else "কোম্পানি > মডেল > ভ্যারিয়েন্ট > কালার > ব্যাটারি > বক্স > সাপ্লায়ার > মূল্য",
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -593,19 +596,19 @@ fun AddEditProductScreen(
                         val cost = purchasePriceStr.toDoubleOrNull()
                         val target = targetSalePriceStr.toDoubleOrNull()
                         if (company.isBlank() || model.isBlank()) {
-                            validationError = "অনুগ্রহ করে কোম্পানির নাম ও মডেল উল্লেখ করুন।"
+                            validationError = if (isEnglish) "Please enter company name and model." else "অনুগ্রহ করে কোম্পানির নাম ও মডেল উল্লেখ করুন।"
                             return@Button
                         }
                         if (cost == null || cost <= 0) {
-                            validationError = "অনুগ্রহ করে সঠিক কেনা মূল্য উল্লেখ করুন।"
+                            validationError = if (isEnglish) "Please enter a valid purchase/cost price." else "অনুগ্রহ করে সঠিক কেনা মূল্য উল্লেখ করুন।"
                             return@Button
                         }
                         if (target == null || target <= 0) {
-                            validationError = "অনুগ্রহ করে সঠিক বিক্রয় মূল্য উল্লেখ করুন।"
+                            validationError = if (isEnglish) "Please enter a valid target sale price." else "অনুগ্রহ করে সঠিক বিক্রয় মূল্য উল্লেখ করুন।"
                             return@Button
                         }
                         if (imei.isBlank()) {
-                            validationError = "আইএমইআই বা সিরিয়াল নম্বর প্রদান করুন।"
+                            validationError = if (isEnglish) "Please enter or scan an IMEI/serial number." else "আইএমইআই বা সিরিয়াল নম্বর প্রদান করুন।"
                             return@Button
                         }
 
@@ -634,7 +637,7 @@ fun AddEditProductScreen(
                     Icon(imageVector = Icons.Default.Check, contentDescription = "Save")
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (editingProduct == null) "স্টকে যুক্ত করুন (Save to Stock)" else "তথ্য আপডেট করুন (Update Product)",
+                        text = if (editingProduct == null) strings.btnSaveProduct else (if (isEnglish) "Update Product" else "তথ্য আপডেট করুন"),
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Bold
                     )
