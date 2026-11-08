@@ -2,13 +2,24 @@ package com.example.data.model
 
 data class ShopSettings(
     val appLanguage: String = "BN", // "BN" (বাংলা) or "EN" (English)
-    val shopName: String = "Zafrin Electronics",
-    val shopTagline: String = "এক্সক্লুসিভ স্মার্টফোন ও ইলেকট্রনিক্স শপ",
-    val shopPhone: String = "01700000000",
-    val shopAddress: String = "ঢাকা, বাংলাদেশ",
+    val textScale: Float = 0.85f, // Interface text scale factor
+    val shopName: String = "Apple Area Shop",
+    val shopTagline: String = "Buy Sell & Exchange",
+    val shopPhone: String = "01930833375, 01758596640",
+    val shopAddress: String = "Shop No # 100, Basement - 1, Bashundhara City Shopping Mall, Panthapath, Dhaka- 1205",
     val warrantyReplacement: String = "7 Days Replacement Guarantee Without physical Damage & Touch Display.",
     val warrantyService: String = "2 Years Service Warranty Without Parts & update issue.",
     val warrantyExchangeDeduction: String = "30% - 35% Deducted From Sell Amount and Exchange.",
+    val memoFooterNote: String = "ধন্যবাদ, আবার আসবেন! যেকোনো প্রয়োজনে আমাদের সাথে যোগাযোগ করুন।",
+    val themePrimaryColorHex: String = "#0071E3",
+    val customTabDashboard: String = "",
+    val customTabStock: String = "",
+    val customTabExpenses: String = "",
+    val customTabEmployees: String = "",
+    val customTabSales: String = "",
+    val customTabSettings: String = "",
+    val showExpensesTab: Boolean = true,
+    val showEmployeesTab: Boolean = true,
     val companyPresets: List<String> = listOf("Apple", "Samsung", "Google", "Xiaomi", "OnePlus", "Vivo", "Oppo", "Realme"),
     val variantPresets: List<String> = listOf("64GB", "128GB", "256GB", "512GB", "1TB"),
     val colorPresets: List<String> = listOf("Natural Titanium", "Desert Titanium", "Black Titanium", "White Titanium", "Deep Purple", "Midnight", "Starlight", "Blue", "Space Gray"),

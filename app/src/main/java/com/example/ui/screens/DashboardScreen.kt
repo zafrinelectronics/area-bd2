@@ -22,13 +22,25 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Analytics
+import androidx.compose.material.icons.filled.AssignmentReturn
+import androidx.compose.material.icons.filled.Badge
 import androidx.compose.material.icons.filled.BatteryFull
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Logout
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Shield
+import androidx.compose.material.icons.filled.CloudSync
+import androidx.compose.material.icons.filled.CloudDone
+import androidx.compose.material.icons.filled.Refresh
+import com.example.data.model.AppUser
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.SettingsBackupRestore
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.LocalAtm
+import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.PhoneIphone
 import androidx.compose.material.icons.filled.PointOfSale
 import androidx.compose.material.icons.filled.QrCodeScanner
@@ -80,12 +92,22 @@ fun DashboardScreen(
     products: List<Product>,
     searchQuery: String,
     onSearchChange: (String) -> Unit,
+    shopSettings: com.example.data.model.ShopSettings = com.example.data.model.ShopSettings(),
     onAddProductClick: () -> Unit,
     onOpenScanner: () -> Unit,
     onNavigateTab: (AppTab) -> Unit,
     onSellProduct: (Product) -> Unit,
     onEditProduct: (Product) -> Unit,
-    onDeleteProduct: (Product) -> Unit
+    onDeleteProduct: (Product) -> Unit,
+    onReturnProduct: (Product) -> Unit = {},
+    currentUser: AppUser? = null,
+    onOpenUserManagement: () -> Unit = {},
+    onLogout: () -> Unit = {},
+    isGitHubSyncing: Boolean = false,
+    lastGitHubSyncTime: Long = 0L,
+    hasGitHubConfigured: Boolean = false,
+    onOpenGitHubSync: () -> Unit = {},
+    onTriggerSyncNow: () -> Unit = {}
 ) {
     val strings = LocalAppStrings.current
     val isEnglish = strings.tabDashboard == "Dashboard"
@@ -119,7 +141,7 @@ fun DashboardScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Image(
                             painter = painterResource(id = R.drawable.shop_logo),
-                            contentDescription = "Zafrin Electronics Logo",
+                            contentDescription = "Shop App Logo",
                             modifier = Modifier
                                 .height(48.dp)
                                 .width(80.dp)
@@ -129,40 +151,66 @@ fun DashboardScreen(
 
                         Column {
                             Text(
-                                text = strings.appTitle,
-                                fontSize = 19.sp,
+                                text = shopSettings.shopName,
+                                fontSize = 18.sp,
                                 fontWeight = FontWeight.ExtraBold,
                                 color = MaterialTheme.colorScheme.onSurface,
                                 letterSpacing = 0.5.sp
                             )
                             Text(
-                                text = currentDateStr,
+                                text = "${shopSettings.shopTagline} • $currentDateStr",
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                         }
                     }
 
-                    // 100% Offline Badge
+                    // Live Online Cloud Sync Badge
                     Surface(
                         shape = RoundedCornerShape(20.dp),
-                        color = Color(0xFF10B981).copy(alpha = 0.15f),
-                        modifier = Modifier.padding(start = 4.dp)
+                        color = if (hasGitHubConfigured) {
+                            if (isGitHubSyncing) Color(0xFF3B82F6).copy(alpha = 0.15f)
+                            else Color(0xFF10B981).copy(alpha = 0.15f)
+                        } else {
+                            Color(0xFFF59E0B).copy(alpha = 0.15f)
+                        },
+                        modifier = Modifier
+                            .padding(start = 4.dp)
+                            .clickable {
+                                if (hasGitHubConfigured) onTriggerSyncNow()
+                                else onOpenGitHubSync()
+                            }
+                            .testTag("dashboard_live_sync_badge")
                     ) {
                         Row(
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                            modifier = Modifier.padding(horizontal = 9.dp, vertical = 5.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Box(
                                 modifier = Modifier
-                                    .size(7.dp)
-                                    .background(Color(0xFF10B981), CircleShape)
+                                    .size(8.dp)
+                                    .background(
+                                        if (hasGitHubConfigured) {
+                                            if (isGitHubSyncing) Color(0xFF2563EB) else Color(0xFF10B981)
+                                        } else Color(0xFFD97706),
+                                        CircleShape
+                                    )
                             )
-                            Spacer(modifier = Modifier.width(5.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = if (isEnglish) "Offline Ready" else "অফলাইন রেডি",
-                                color = Color(0xFF059669),
-                                fontSize = 10.sp,
+                                text = if (hasGitHubConfigured) {
+                                    if (isGitHubSyncing) {
+                                        if (isEnglish) "Syncing..." else "সিঙ্ক হচ্ছে..."
+                                    } else {
+                                        if (isEnglish) "Online Live" else "অনলাইন লাইভ"
+                                    }
+                                } else {
+                                    if (isEnglish) "Setup Cloud" else "অনলাইন সেটআপ"
+                                },
+                                color = if (hasGitHubConfigured) {
+                                    if (isGitHubSyncing) Color(0xFF1D4ED8) else Color(0xFF047857)
+                                } else Color(0xFFB45309),
+                                fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -171,7 +219,197 @@ fun DashboardScreen(
             }
         }
 
-        // Quick Stats KPI Cards (2x2 Grid)
+        // Online Cloud Sync Status Card
+        if (!hasGitHubConfigured) {
+            item {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { onOpenGitHubSync() },
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFEF3C7)),
+                    border = CardDefaults.outlinedCardBorder()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .size(38.dp)
+                                .background(Color(0xFFD97706), CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CloudSync,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = if (isEnglish) "Real-time Multi-Device Cloud Sync" else "রিয়েল-টাইম মাল্টি-ডিভাইস অনলাইন সিঙ্ক",
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 13.sp,
+                                color = Color(0xFF92400E)
+                            )
+                            Text(
+                                text = if (isEnglish) "Link your GitHub repository so all users see added stock and sales instantly on every device."
+                                else "একটি ফোনে স্টক যোগ বা সেল করলে সাথে সাথে সবার ফোনে শো হওয়ার জন্য GitHub ক্লাউড লিঙ্ক করুন।",
+                                fontSize = 11.sp,
+                                color = Color(0xFFB45309)
+                            )
+                        }
+                        Button(
+                            onClick = onOpenGitHubSync,
+                            shape = RoundedCornerShape(10.dp),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD97706))
+                        ) {
+                            Text(if (isEnglish) "Connect" else "লিঙ্ক করুন", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        } else {
+            // Configured: Show active real-time sync notification bar with manual refresh button
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFECFDF5)),
+                    border = CardDefaults.outlinedCardBorder()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.CloudDone,
+                                contentDescription = null,
+                                tint = Color(0xFF059669),
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Column {
+                                Text(
+                                    text = if (isEnglish) "Online Live Cloud Sync Active" else "অনলাইন লাইভ ক্লাউড সিঙ্ক সক্রিয়",
+                                    fontSize = 12.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color(0xFF065F46)
+                                )
+                                Text(
+                                    text = if (isEnglish) "Stock & sales synchronize in real-time across all devices"
+                                    else "সবাই সাথে সাথে নতুন স্টক ও বিক্রয় আপডেট দেখতে পাচ্ছে",
+                                    fontSize = 10.sp,
+                                    color = Color(0xFF047857)
+                                )
+                            }
+                        }
+                        IconButton(
+                            onClick = onTriggerSyncNow,
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Refresh,
+                                contentDescription = "Sync Now",
+                                tint = Color(0xFF059669),
+                                modifier = Modifier.size(18.dp)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // User Profile & Admin Controls Bar
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(14.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = AppleBlue.copy(alpha = 0.15f),
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = if (currentUser?.isAdmin == true) Icons.Default.Shield else Icons.Default.Person,
+                                    contentDescription = null,
+                                    tint = AppleBlue,
+                                    modifier = Modifier.size(16.dp)
+                                )
+                            }
+                        }
+                        Column {
+                            Text(
+                                text = currentUser?.fullName ?: "CONOCK (Admin)",
+                                fontSize = 12.5.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "ইউজার: ${currentUser?.username ?: "CONOCK"} (${if (currentUser?.isAdmin == true) "এডমিন" else "স্টাফ"})",
+                                fontSize = 10.sp,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        if (currentUser?.isAdmin == true) {
+                            Button(
+                                onClick = onOpenUserManagement,
+                                colors = ButtonDefaults.buttonColors(containerColor = AppleBlue),
+                                shape = RoundedCornerShape(8.dp),
+                                modifier = Modifier
+                                    .height(32.dp)
+                                    .testTag("dashboard_user_management_btn")
+                            ) {
+                                Icon(Icons.Default.AdminPanelSettings, contentDescription = null, modifier = Modifier.size(14.dp))
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text("ইউজার কন্ট্রোল", fontSize = 10.5.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+
+                        OutlinedButton(
+                            onClick = onLogout,
+                            shape = RoundedCornerShape(8.dp),
+                            modifier = Modifier
+                                .height(32.dp)
+                                .testTag("dashboard_logout_btn"),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444).copy(alpha = 0.6f))
+                        ) {
+                            Icon(Icons.Default.Logout, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("লগআউট", fontSize = 10.5.sp, color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+            }
+        }
         item {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Row(
@@ -261,6 +499,108 @@ fun DashboardScreen(
             }
         }
 
+        // Quick Modules Access: Daily Expenses & Staff Payroll
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                // Cashbook & Daily Expenses Card
+                Card(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onNavigateTab(AppTab.EXPENSES) }
+                        .testTag("dashboard_goto_expenses"),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = Color(0xFFE11D48).copy(alpha = 0.12f),
+                            modifier = Modifier.size(38.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Payments,
+                                    contentDescription = null,
+                                    tint = Color(0xFFE11D48),
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                        Column {
+                            Text(
+                                text = strings.tabExpenses,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "আজকের ক্যাশ হিসাব",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+                }
+
+                // Employees & Staff Payroll Card
+                Card(
+                    modifier = Modifier
+                        .weight(1f)
+                        .clickable { onNavigateTab(AppTab.EMPLOYEES) }
+                        .testTag("dashboard_goto_employees"),
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        Surface(
+                            shape = CircleShape,
+                            color = AppleBlue.copy(alpha = 0.12f),
+                            modifier = Modifier.size(38.dp)
+                        ) {
+                            Box(contentAlignment = Alignment.Center) {
+                                Icon(
+                                    imageVector = Icons.Default.Badge,
+                                    contentDescription = null,
+                                    tint = AppleBlue,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        }
+                        Column {
+                            Text(
+                                text = strings.tabEmployees,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                text = "${metrics.totalStaffCount} জন কর্মরত স্টাফ",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontSize = 11.sp
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
         // Search Bar in Dashboard
         item {
             OutlinedTextField(
@@ -345,7 +685,8 @@ fun DashboardScreen(
                     product = product,
                     onSellClick = { onSellProduct(product) },
                     onEditClick = { onEditProduct(product) },
-                    onDeleteClick = { onDeleteProduct(product) }
+                    onDeleteClick = { onDeleteProduct(product) },
+                    onReturnClick = { onReturnProduct(product) }
                 )
             }
         }
@@ -423,7 +764,9 @@ fun ProductItemCard(
     product: Product,
     onSellClick: () -> Unit,
     onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onReturnClick: (() -> Unit)? = null,
+    onRestoreClick: (() -> Unit)? = null
 ) {
     val strings = com.example.ui.LocalAppStrings.current
     val isEnglish = strings.tabDashboard == "Dashboard"
@@ -468,13 +811,19 @@ fun ProductItemCard(
                     )
                 }
 
+                val (statusBg, statusTextColor, statusLabel) = when (product.status) {
+                    ProductStatus.IN_STOCK.name -> Triple(Color(0xFFD1FAE5), Color(0xFF065F46), strings.statusInStock)
+                    ProductStatus.RETURNED.name -> Triple(Color(0xFFFEF3C7), Color(0xFFB45309), "রিটার্নড (Returned)")
+                    else -> Triple(Color(0xFFE2E8F0), Color(0xFF475569), strings.statusSold)
+                }
+
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = if (product.status == ProductStatus.IN_STOCK.name) Color(0xFFD1FAE5) else Color(0xFFE2E8F0)
+                    color = statusBg
                 ) {
                     Text(
-                        text = if (product.status == ProductStatus.IN_STOCK.name) strings.statusInStock else strings.statusSold,
-                        color = if (product.status == ProductStatus.IN_STOCK.name) Color(0xFF065F46) else Color(0xFF475569),
+                        text = statusLabel,
+                        color = statusTextColor,
                         fontSize = 10.sp,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
@@ -550,6 +899,46 @@ fun ProductItemCard(
                 }
             }
 
+            // Return Info Banner (if returned)
+            if (product.status == ProductStatus.RETURNED.name) {
+                Surface(
+                    shape = RoundedCornerShape(10.dp),
+                    color = Color(0xFFFEF3C7),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Column(
+                        modifier = Modifier.padding(10.dp),
+                        verticalArrangement = Arrangement.spacedBy(2.dp)
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(imageVector = Icons.Default.AssignmentReturn, contentDescription = "Return", tint = Color(0xFFB45309), modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "রিটার্নের কারণ: ${product.returnReason.ifBlank { "সাধারণ রিটার্ন" }}",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF92400E)
+                            )
+                        }
+                        if (product.returnRefundAmount > 0.0) {
+                            Text(
+                                text = "সাপ্লায়ার থেকে ফেরত অর্থ: ৳ ${InventoryViewModel.formatAmount(product.returnRefundAmount, lang)}",
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = Color(0xFF047857)
+                            )
+                        }
+                        if (product.returnNotes.isNotBlank()) {
+                            Text(
+                                text = "নোট: ${product.returnNotes}",
+                                fontSize = 10.sp,
+                                color = Color(0xFF78350F)
+                            )
+                        }
+                    }
+                }
+            }
+
             // Action Buttons
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -570,18 +959,49 @@ fun ProductItemCard(
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(strings.btnSell, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                     }
-                }
 
-                OutlinedButton(
-                    onClick = onEditClick,
-                    modifier = Modifier
-                        .height(40.dp)
-                        .testTag("edit_product_button_${product.id}"),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(strings.btnEdit, fontSize = 12.sp)
+                    if (onReturnClick != null) {
+                        OutlinedButton(
+                            onClick = onReturnClick,
+                            modifier = Modifier
+                                .height(40.dp)
+                                .testTag("return_product_button_${product.id}"),
+                            shape = RoundedCornerShape(10.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFD97706))
+                        ) {
+                            Icon(imageVector = Icons.Default.AssignmentReturn, contentDescription = "Return", tint = Color(0xFFD97706), modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("রিটার্ন", fontSize = 12.sp, color = Color(0xFFD97706), fontWeight = FontWeight.SemiBold)
+                        }
+                    }
+
+                    OutlinedButton(
+                        onClick = onEditClick,
+                        modifier = Modifier
+                            .height(40.dp)
+                            .testTag("edit_product_button_${product.id}"),
+                        shape = RoundedCornerShape(10.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit", modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(strings.btnEdit, fontSize = 12.sp)
+                    }
+                } else if (product.status == ProductStatus.RETURNED.name) {
+                    if (onRestoreClick != null) {
+                        Button(
+                            onClick = onRestoreClick,
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(40.dp)
+                                .testTag("restore_product_button_${product.id}"),
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0F766E)),
+                            shape = RoundedCornerShape(10.dp)
+                        ) {
+                            Icon(imageVector = Icons.Default.SettingsBackupRestore, contentDescription = "Restore", modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text("পুনরায় স্টকে নিন", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
                 }
 
                 IconButton(

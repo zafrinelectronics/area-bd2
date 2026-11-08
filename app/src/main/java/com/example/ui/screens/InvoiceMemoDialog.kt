@@ -94,12 +94,12 @@ fun InvoiceMemoDialog(
 ${strings.invoiceNoLabel}: #${sale.invoiceNumber}
 ${strings.dateLabel}: $formattedDate
 
-[${strings.customerInfoSection}]
+${strings.customerInfoSection}
 ${if (isEnglish) "Name:" else "নাম:"} ${sale.customerName}
 ${if (isEnglish) "Phone:" else "মোবাইল:"} ${sale.customerPhone}
 ${if (sale.customerAddress.isNotBlank()) "${if (isEnglish) "Address:" else "ঠিকানা:"} ${sale.customerAddress}" else ""}
 
-[${strings.productDetailsSection}]
+${strings.productDetailsSection}
 ${if (isEnglish) "Device:" else "প্রোডাক্ট:"} ${sale.productDetails}
 ${strings.imeiLabel} ${sale.imei}
 ${if (sale.batteryHealth.isNotBlank()) "${strings.batteryLabel} ${sale.batteryHealth}" else ""}
@@ -174,7 +174,7 @@ ${shopSettings.shopName} • ${shopSettings.shopPhone}
                         }
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = "ডিজিটাল ক্যাশ মেমো",
+                            text = if (isEnglish) "Digital Cash Memo" else "ডিজিটাল ক্যাশ মেমো",
                             fontSize = 17.sp,
                             fontWeight = FontWeight.Bold
                         )
@@ -227,7 +227,7 @@ ${shopSettings.shopName} • ${shopSettings.shopPhone}
                                 text = shopSettings.shopName,
                                 fontSize = 20.sp,
                                 fontWeight = FontWeight.ExtraBold,
-                                color = AppleBlue,
+                                color = MaterialTheme.colorScheme.primary,
                                 letterSpacing = 1.sp
                             )
                             Text(
@@ -252,7 +252,7 @@ ${shopSettings.shopName} • ${shopSettings.shopPhone}
                         HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
                         // Customer Details
-                        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                             Text(
                                 text = strings.customerInfoSection,
                                 fontSize = 11.sp,
@@ -264,17 +264,25 @@ ${shopSettings.shopName} • ${shopSettings.shopPhone}
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Bold
                             )
-                            Text(
-                                text = "${if (isEnglish) "Phone:" else "মোবাইল:"} ${sale.customerPhone}",
-                                fontSize = 12.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            if (sale.customerAddress.isNotBlank()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 Text(
-                                    text = "${if (isEnglish) "Address:" else "ঠিকানা:"} ${sale.customerAddress}",
-                                    fontSize = 11.sp,
+                                    text = "${if (isEnglish) "Phone:" else "মোবাইল:"} ${sale.customerPhone}",
+                                    fontSize = 12.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
+                                if (sale.customerAddress.isNotBlank()) {
+                                    Text(
+                                        text = "${if (isEnglish) "Address:" else "ঠিকানা:"} ${sale.customerAddress}",
+                                        fontSize = 11.sp,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        textAlign = TextAlign.End,
+                                        modifier = Modifier.padding(start = 8.dp)
+                                    )
+                                }
                             }
                         }
 
@@ -375,66 +383,172 @@ ${shopSettings.shopName} • ${shopSettings.shopPhone}
                             }
                         }
 
-                        // Warranty Badge
+                        // Warranty Policy Box (Light yellow box as requested)
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .clip(RoundedCornerShape(8.dp))
-                                .background(AppleBlue.copy(alpha = 0.08f))
-                                .padding(10.dp)
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(Color(0xFFFEFCE8))
+                                .border(1.dp, Color(0xFFFEF08A), RoundedCornerShape(10.dp))
+                                .padding(12.dp)
                         ) {
-                            Column {
-                                Text(
-                                    text = strings.warrantySection,
-                                    fontSize = 11.sp,
-                                    fontWeight = FontWeight.Bold,
-                                    color = AppleBlue
-                                )
+                            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Image(
+                                            painter = painterResource(id = R.drawable.shop_logo),
+                                            contentDescription = "Shop Logo",
+                                            modifier = Modifier
+                                                .height(28.dp)
+                                                .width(46.dp)
+                                                .padding(end = 6.dp)
+                                        )
+                                        Text(
+                                            text = strings.warrantySection,
+                                            fontSize = 12.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFFA16207)
+                                        )
+                                    }
+                                    Surface(
+                                        shape = RoundedCornerShape(6.dp),
+                                        color = Color(0xFF10B981).copy(alpha = 0.15f)
+                                    ) {
+                                        Text(
+                                            text = "Verified Warranty",
+                                            fontSize = 9.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color(0xFF047857),
+                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                        )
+                                    }
+                                }
                                 Text(
                                     text = sale.warrantyInfo.ifBlank { shopSettings.fullWarrantyText },
                                     fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    color = Color(0xFF451A03),
+                                    lineHeight = 16.sp
                                 )
                             }
                         }
 
-                        // Store Stamp
+                        // Equal Signatures on both sides of QR Code (কিউ আর কোড বরাবর দু'পাশে ক্রেতার স্বাক্ষর এবং কর্তৃপক্ষের স্বাক্ষরিত সমান থাকবে)
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(top = 10.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.Bottom
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = strings.memoDisclaimer,
-                                fontSize = 9.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            // Left: ক্রেতার স্বাক্ষর (Equal left side)
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
                                 Box(
                                     modifier = Modifier
-                                        .size(44.dp)
-                                        .border(1.5.dp, AppleBlue, CircleShape),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.CheckCircle,
-                                        contentDescription = "Verified Seal",
-                                        tint = AppleBlue,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
+                                        .width(82.dp)
+                                        .height(1.dp)
+                                        .background(Color(0xFF94A3B8))
+                                )
                                 Text(
-                                    text = "${shopSettings.shopName}\nAuthorized",
-                                    fontSize = 8.sp,
-                                    textAlign = TextAlign.Center,
-                                    fontWeight = FontWeight.Bold,
-                                    color = AppleBlue
+                                    text = "ক্রেতার স্বাক্ষর",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+
+                            // Center: QR Code
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier.padding(horizontal = 6.dp)
+                            ) {
+                                Image(
+                                    painter = painterResource(id = R.drawable.shop_qr_code),
+                                    contentDescription = "Shop QR Code",
+                                    modifier = Modifier
+                                        .size(64.dp)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .border(1.dp, Color(0xFFE2E8F0), RoundedCornerShape(8.dp))
+                                        .background(Color.White)
+                                        .padding(4.dp)
+                                )
+                            }
+
+                            // Right: কর্তৃপক্ষের স্বাক্ষর (Equal right side)
+                            Column(
+                                modifier = Modifier.weight(1f),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .width(82.dp)
+                                        .height(1.dp)
+                                        .background(Color(0xFF94A3B8))
+                                )
+                                Text(
+                                    text = "কর্তৃপক্ষের স্বাক্ষর",
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
+
+                        // Bottom Center Shop Tagline
+                        Text(
+                            text = "${shopSettings.shopName} • ${shopSettings.shopTagline}",
+                            fontSize = 10.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 6.dp)
+                        )
+
+                        // Shop Address & Hotline
+                        Text(
+                            text = "${shopSettings.shopAddress}\nহটলাইন: ${shopSettings.shopPhone}",
+                            fontSize = 9.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 2.dp)
+                        )
+
+                        // Custom Thank You / Footer Note
+                        if (shopSettings.memoFooterNote.isNotBlank()) {
+                            Text(
+                                text = shopSettings.memoFooterNote,
+                                fontSize = 9.5.sp,
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.primary,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(top = 4.dp)
+                            )
+                        }
+
+                        // Disclaimer
+                        Text(
+                            text = strings.memoDisclaimer,
+                            fontSize = 8.5.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(top = 2.dp)
+                        )
                     }
                 }
 

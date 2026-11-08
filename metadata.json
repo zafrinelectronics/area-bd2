@@ -1,6 +1,6 @@
 {
-  "name": "Zafrin Electronics",
-  "description": "Mobile inventory, sales, customer tracking, and reporting app for APPLE AREA BD with full offline support.",
+  "name": "Apple Area Shop",
+  "description": "Comprehensive offline shop inventory, invoicing, expense, and staff management app with automatic GitHub.com repository sync.",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

@@ -14,6 +14,9 @@ interface SaleDao {
     @Query("SELECT * FROM sales ORDER BY soldAt DESC")
     fun getAllSales(): Flow<List<Sale>>
 
+    @Query("SELECT * FROM sales ORDER BY soldAt DESC")
+    suspend fun getAllSalesSync(): List<Sale>
+
     @Query("SELECT * FROM sales WHERE id = :id LIMIT 1")
     suspend fun getSaleById(id: Long): Sale?
 

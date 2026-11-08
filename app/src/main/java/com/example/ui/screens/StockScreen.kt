@@ -1,6 +1,7 @@
 package com.example.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,12 +18,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.CloudSync
+import androidx.compose.material.icons.filled.CloudDone
+import androidx.compose.material.icons.filled.Code
 import androidx.compose.material.icons.filled.FilterList
 import androidx.compose.material.icons.filled.Inventory
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
@@ -60,15 +66,23 @@ fun StockScreen(
     products: List<Product>,
     searchQuery: String,
     onSearchChange: (String) -> Unit,
-    selectedStatusFilter: String,
-    onStatusFilterChange: (String) -> Unit,
     selectedBrandFilter: String,
     onBrandFilterChange: (String) -> Unit,
     onAddProductClick: () -> Unit,
+    onBulkAddClick: () -> Unit = {},
+    onGitHubSyncClick: () -> Unit = {},
+    lastSyncTime: Long = 0L,
+    isSyncing: Boolean = false,
+    hasGitHubConfigured: Boolean = false,
+    onTriggerSyncNow: () -> Unit = {},
     onOpenScanner: () -> Unit,
     onSellProduct: (Product) -> Unit,
     onEditProduct: (Product) -> Unit,
-    onDeleteProduct: (Product) -> Unit
+    onDeleteProduct: (Product) -> Unit,
+    onReturnProduct: (Product) -> Unit = {},
+    onRestoreProduct: (Product) -> Unit = {},
+    selectedStatusFilter: String = "IN_STOCK",
+    onStatusFilterChange: (String) -> Unit = {}
 ) {
     val strings = com.example.ui.LocalAppStrings.current
     val isEnglish = strings.tabDashboard == "Dashboard"
@@ -80,20 +94,44 @@ fun StockScreen(
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = onAddProductClick,
-                containerColor = AppleBlue,
-                contentColor = Color.White,
-                shape = RoundedCornerShape(16.dp),
-                modifier = Modifier.testTag("stock_fab_add_button")
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    modifier = Modifier.padding(horizontal = 16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                // Bulk Stock FAB
+                FloatingActionButton(
+                    onClick = onBulkAddClick,
+                    containerColor = Color(0xFF4F46E5),
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.testTag("stock_fab_bulk_add_button")
                 ) {
-                    Icon(imageVector = Icons.Default.Add, contentDescription = "Add")
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(strings.actionAddStock, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(imageVector = Icons.Default.Layers, contentDescription = "Bulk Add", modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(if (isEnglish) "Bulk Add" else "বাল্ক স্টক যোগ", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
+                }
+
+                // Single Stock FAB
+                FloatingActionButton(
+                    onClick = onAddProductClick,
+                    containerColor = AppleBlue,
+                    contentColor = Color.White,
+                    shape = RoundedCornerShape(16.dp),
+                    modifier = Modifier.testTag("stock_fab_add_button")
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = "Add", modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(strings.actionAddStock, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
                 }
             }
         }
@@ -150,41 +188,145 @@ fun StockScreen(
                 }
             }
 
-            // Status Filter Chips
+            // Quick Dual Add & Google Drive Sync Action Row
             item {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    FilterChip(
-                        selected = selectedStatusFilter == "ALL",
-                        onClick = { onStatusFilterChange("ALL") },
-                        label = { Text("${strings.filterAll} (${products.size})", fontSize = 12.sp) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = AppleBlue,
-                            selectedLabelColor = Color.White
-                        )
-                    )
+                    // Single Stock Add
+                    Button(
+                        onClick = onAddProductClick,
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(44.dp)
+                            .testTag("stock_add_button"),
+                        colors = ButtonDefaults.buttonColors(containerColor = AppleBlue),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(if (isEnglish) "Add Single" else "স্টক যোগ", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
 
-                    FilterChip(
-                        selected = selectedStatusFilter == "IN_STOCK",
-                        onClick = { onStatusFilterChange("IN_STOCK") },
-                        label = { Text("${strings.filterInStock} ($inStockCount)", fontSize = 12.sp) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = Color(0xFF10B981),
-                            selectedLabelColor = Color.White
-                        )
-                    )
+                    // Bulk Stock Add
+                    Button(
+                        onClick = onBulkAddClick,
+                        modifier = Modifier
+                            .weight(1.2f)
+                            .height(44.dp)
+                            .testTag("stock_bulk_add_button"),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF4F46E5)),
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Icon(imageVector = Icons.Default.Layers, contentDescription = null, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(if (isEnglish) "Bulk Add (Multiple)" else "বাল্ক স্টক যোগ", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    }
 
-                    FilterChip(
-                        selected = selectedStatusFilter == "SOLD",
-                        onClick = { onStatusFilterChange("SOLD") },
-                        label = { Text("${strings.filterSold} (${products.count { it.status == ProductStatus.SOLD.name }})", fontSize = 12.sp) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = Color(0xFF64748B),
-                            selectedLabelColor = Color.White
+                    // Live Online Cloud Sync Button
+                    Surface(
+                        shape = RoundedCornerShape(12.dp),
+                        color = if (hasGitHubConfigured) {
+                            if (isSyncing) Color(0xFF3B82F6).copy(alpha = 0.15f)
+                            else Color(0xFF10B981).copy(alpha = 0.15f)
+                        } else {
+                            Color(0xFFF59E0B).copy(alpha = 0.15f)
+                        },
+                        modifier = Modifier
+                            .height(44.dp)
+                            .clickable {
+                                if (hasGitHubConfigured) onTriggerSyncNow()
+                                else onGitHubSyncClick()
+                            }
+                            .testTag("stock_github_sync_button")
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(horizontal = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = if (hasGitHubConfigured) Icons.Default.CloudDone else Icons.Default.CloudSync,
+                                contentDescription = "Cloud Sync",
+                                tint = if (hasGitHubConfigured) Color(0xFF047857) else Color(0xFFB45309),
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = if (hasGitHubConfigured) {
+                                    if (isSyncing) (if (isEnglish) "Syncing..." else "সিঙ্ক...") else (if (isEnglish) "Live" else "অনলাইন")
+                                } else {
+                                    if (isEnglish) "Cloud" else "ক্লাউড"
+                                },
+                                fontSize = 11.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = if (hasGitHubConfigured) Color(0xFF047857) else Color(0xFFB45309)
+                            )
+                        }
+                    }
+                }
+            }
+
+            // In-stock active badge
+            item {
+                Surface(
+                    shape = RoundedCornerShape(12.dp),
+                    color = Color(0xFF10B981).copy(alpha = 0.12f),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 14.dp, vertical = 10.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Box(
+                                modifier = Modifier
+                                    .size(8.dp)
+                                    .background(Color(0xFF10B981), CircleShape)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = if (isEnglish) "Available In-Stock Devices ($inStockCount)" else "দোকানের সক্রিয় স্টক পণ্য ($inStockCount টি)",
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color(0xFF047857)
+                            )
+                        }
+                        Text(
+                            text = if (isEnglish) "Sold items go to Sales page" else "বিক্রি হলে অটো সেলস পেইজে যাবে",
+                            fontSize = 11.sp,
+                            color = Color(0xFF047857).copy(alpha = 0.8f)
                         )
+                    }
+                }
+            }
+
+            // Status Filter Chips (স্টক vs রিটার্নড)
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    val statusOptions = listOf(
+                        "IN_STOCK" to if (isEnglish) "In Stock" else "স্টকে সক্রিয়",
+                        "RETURNED" to if (isEnglish) "Returned" else "রিটার্নড ডিভাইস",
+                        "ALL" to if (isEnglish) "All" else "সকল পণ্য"
                     )
+                    statusOptions.forEach { (key, label) ->
+                        val isSelected = selectedStatusFilter == key
+                        FilterChip(
+                            selected = isSelected,
+                            onClick = { onStatusFilterChange(key) },
+                            label = { Text(label, fontSize = 11.sp, fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal) },
+                            colors = FilterChipDefaults.filterChipColors(
+                                selectedContainerColor = if (key == "RETURNED") Color(0xFFD97706) else AppleBlue,
+                                selectedLabelColor = Color.White
+                            )
+                        )
+                    }
                 }
             }
 
@@ -281,7 +423,9 @@ fun StockScreen(
                         product = product,
                         onSellClick = { onSellProduct(product) },
                         onEditClick = { onEditProduct(product) },
-                        onDeleteClick = { onDeleteProduct(product) }
+                        onDeleteClick = { onDeleteProduct(product) },
+                        onReturnClick = { onReturnProduct(product) },
+                        onRestoreClick = { onRestoreProduct(product) }
                     )
                 }
             }

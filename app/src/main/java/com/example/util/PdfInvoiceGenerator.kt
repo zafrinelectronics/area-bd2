@@ -39,19 +39,19 @@ object PdfInvoiceGenerator {
     /**
      * Builds an in-memory Android PdfDocument for the given Sale invoice
      */
-    fun createPdfDocument(sale: Sale, shopSettings: ShopSettings): PdfDocument {
+    fun createPdfDocument(context: Context, sale: Sale, shopSettings: ShopSettings): PdfDocument {
         val document = PdfDocument()
         val pageInfo = PdfDocument.PageInfo.Builder(PAGE_WIDTH, PAGE_HEIGHT, 1).create()
         val page = document.startPage(pageInfo)
         val canvas: Canvas = page.canvas
 
-        drawInvoiceCanvas(canvas, sale, shopSettings)
+        drawInvoiceCanvas(context, canvas, sale, shopSettings)
 
         document.finishPage(page)
         return document
     }
 
-    private fun drawInvoiceCanvas(canvas: Canvas, sale: Sale, shopSettings: ShopSettings) {
+    private fun drawInvoiceCanvas(context: Context, canvas: Canvas, sale: Sale, shopSettings: ShopSettings) {
         val paint = Paint(Paint.ANTI_ALIAS_FLAG)
         val dateFormat = SimpleDateFormat("dd MMMM, yyyy - hh:mm a", if (shopSettings.appLanguage == "EN") Locale.US else Locale("bn", "BD"))
         val dateString = dateFormat.format(Date(sale.soldAt))
@@ -62,217 +62,228 @@ object PdfInvoiceGenerator {
         // Top decorative accent header band
         paint.color = Color.parseColor("#0284C7")
         paint.style = Paint.Style.FILL
-        canvas.drawRect(0f, 0f, PAGE_WIDTH.toFloat(), 12f, paint)
+        canvas.drawRect(0f, 0f, PAGE_WIDTH.toFloat(), 10f, paint)
+
+        // Draw Shop Logo prominently at the top of the invoice / warranty card
+        try {
+            val logoDrawable = androidx.core.content.ContextCompat.getDrawable(context, com.example.R.drawable.shop_logo)
+            if (logoDrawable != null) {
+                val logoW = 84
+                val logoH = 46
+                val left = (PAGE_WIDTH - logoW) / 2
+                val top = 18
+                logoDrawable.setBounds(left, top, left + logoW, top + logoH)
+                logoDrawable.draw(canvas)
+            }
+        } catch (_: Exception) {}
 
         // Shop Branding Header
         paint.color = Color.parseColor("#0F172A")
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        paint.textSize = 24f
+        paint.textSize = 21f
         paint.textAlign = Paint.Align.CENTER
-        canvas.drawText(shopSettings.shopName, (PAGE_WIDTH / 2).toFloat(), 48f, paint)
+        canvas.drawText(shopSettings.shopName, (PAGE_WIDTH / 2).toFloat(), 82f, paint)
 
         // Tagline
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
-        paint.textSize = 12f
+        paint.textSize = 10f
         paint.color = Color.parseColor("#475569")
-        canvas.drawText(shopSettings.shopTagline, (PAGE_WIDTH / 2).toFloat(), 66f, paint)
+        canvas.drawText(shopSettings.shopTagline, (PAGE_WIDTH / 2).toFloat(), 98f, paint)
 
         // Shop Contact info
-        paint.textSize = 10f
+        paint.textSize = 9f
         paint.color = Color.parseColor("#64748B")
         val contactLine = "${shopSettings.shopAddress}  |  মোবাইল: ${shopSettings.shopPhone}"
-        canvas.drawText(contactLine, (PAGE_WIDTH / 2).toFloat(), 82f, paint)
+        canvas.drawText(contactLine, (PAGE_WIDTH / 2).toFloat(), 112f, paint)
 
-        // Title Badge
-        paint.color = Color.parseColor("#E0F2FE")
-        paint.style = Paint.Style.FILL
-        canvas.drawRoundRect(190f, 96f, 405f, 122f, 8f, 8f, paint)
-
-        paint.color = Color.parseColor("#0369A1")
-        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        paint.textSize = 12f
-        canvas.drawText("ক্যাশ মেমো ও ওয়ারেন্টি কার্ড", (PAGE_WIDTH / 2).toFloat(), 113f, paint)
-
-        // Invoice Meta Info
+        // Invoice Meta Info (Title badge "ক্যাশ মেমো ও ওয়ারেন্টি কার্ড" removed as requested)
         paint.textAlign = Paint.Align.LEFT
         paint.color = Color.parseColor("#1E293B")
-        paint.textSize = 11f
+        paint.textSize = 10.5f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        canvas.drawText("ইনভয়েস নং: #${sale.invoiceNumber}", 40f, 145f, paint)
+        canvas.drawText("ইনভয়েস নং: #${sale.invoiceNumber}", 40f, 136f, paint)
 
         paint.textAlign = Paint.Align.RIGHT
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.color = Color.parseColor("#475569")
-        canvas.drawText("তারিখ: $dateString", (PAGE_WIDTH - 40).toFloat(), 145f, paint)
+        canvas.drawText("তারিখ: $dateString", (PAGE_WIDTH - 40).toFloat(), 136f, paint)
 
         // Horizontal Separator
-        paint.strokeWidth = 1.2f
-        paint.color = Color.parseColor("#CBD5E1")
-        canvas.drawLine(40f, 155f, (PAGE_WIDTH - 40).toFloat(), 155f, paint)
-
-        // Customer Info Card Box
-        paint.style = Paint.Style.FILL
-        paint.color = Color.parseColor("#F8FAFC")
-        canvas.drawRoundRect(40f, 168f, (PAGE_WIDTH - 40).toFloat(), 242f, 10f, 10f, paint)
-
-        paint.style = Paint.Style.STROKE
-        paint.color = Color.parseColor("#E2E8F0")
         paint.strokeWidth = 1f
-        canvas.drawRoundRect(40f, 168f, (PAGE_WIDTH - 40).toFloat(), 242f, 10f, 10f, paint)
+        paint.color = Color.parseColor("#CBD5E1")
+        canvas.drawLine(40f, 146f, (PAGE_WIDTH - 40).toFloat(), 146f, paint)
 
+        // Customer Details (No tinted box behind - clean white background)
         paint.style = Paint.Style.FILL
         paint.textAlign = Paint.Align.LEFT
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.color = Color.parseColor("#0284C7")
-        paint.textSize = 11f
-        canvas.drawText("[ ক্রেতার তথ্য / Customer Info ]", 54f, 188f, paint)
+        paint.textSize = 10.5f
+        canvas.drawText("ক্রেতার তথ্য / Customer Info", 40f, 168f, paint)
 
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.color = Color.parseColor("#1E293B")
-        paint.textSize = 11f
-        canvas.drawText("নাম: ${sale.customerName}", 54f, 208f, paint)
-        canvas.drawText("মোবাইল: ${sale.customerPhone}", 54f, 226f, paint)
+        paint.textSize = 10.5f
+        canvas.drawText("নাম: ${sale.customerName}", 40f, 186f, paint)
+        canvas.drawText("মোবাইল: ${sale.customerPhone}", 40f, 202f, paint)
         if (sale.customerAddress.isNotBlank()) {
-            canvas.drawText("ঠিকানা: ${sale.customerAddress}", 320f, 208f, paint)
+            paint.textAlign = Paint.Align.RIGHT
+            val addressText = "ঠিকানা: ${sale.customerAddress}"
+            val truncatedAddress = if (addressText.length > 40) addressText.take(37) + "..." else addressText
+            canvas.drawText(truncatedAddress, (PAGE_WIDTH - 40).toFloat(), 202f, paint)
+            paint.textAlign = Paint.Align.LEFT
         }
 
-        // Product Details Section Box
-        paint.style = Paint.Style.FILL
-        paint.color = Color.parseColor("#F8FAFC")
-        canvas.drawRoundRect(40f, 255f, (PAGE_WIDTH - 40).toFloat(), 355f, 10f, 10f, paint)
-
-        paint.style = Paint.Style.STROKE
+        // Section Divider
         paint.color = Color.parseColor("#E2E8F0")
-        canvas.drawRoundRect(40f, 255f, (PAGE_WIDTH - 40).toFloat(), 355f, 10f, 10f, paint)
+        canvas.drawLine(40f, 214f, (PAGE_WIDTH - 40).toFloat(), 214f, paint)
 
-        paint.style = Paint.Style.FILL
+        // Product Details Section (No tinted box behind - clean white background)
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.color = Color.parseColor("#0284C7")
-        paint.textSize = 11f
-        canvas.drawText("[ পণ্যের বিবরণ / Device Details ]", 54f, 275f, paint)
+        paint.textSize = 10.5f
+        canvas.drawText("পণ্যের বিবরণ / Device Details", 40f, 234f, paint)
 
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.color = Color.parseColor("#0F172A")
-        paint.textSize = 13f
-        canvas.drawText(sale.productDetails, 54f, 298f, paint)
+        paint.textSize = 12f
+        canvas.drawText(sale.productDetails, 40f, 254f, paint)
 
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.color = Color.parseColor("#334155")
-        paint.textSize = 11f
-        canvas.drawText("আইএমইআই (IMEI): ${sale.imei}", 54f, 320f, paint)
+        paint.textSize = 10.5f
+        canvas.drawText("ডিভাইস (IMEI): ${sale.imei}", 40f, 272f, paint)
 
         val extraSpecs = StringBuilder()
-        if (sale.batteryHealth.isNotBlank()) extraSpecs.append("ব্যাটারি হেল্থ: ${sale.batteryHealth}   ")
+        if (sale.batteryHealth.isNotBlank()) extraSpecs.append("ব্যাটারি: ${sale.batteryHealth}   ")
         if (sale.boxCondition.isNotBlank()) extraSpecs.append("বক্স: ${sale.boxCondition}")
         if (extraSpecs.isNotEmpty()) {
-            canvas.drawText(extraSpecs.toString(), 54f, 340f, paint)
+            canvas.drawText(extraSpecs.toString(), 40f, 290f, paint)
         }
 
-        // Pricing & Payment Table Box
-        paint.style = Paint.Style.FILL
-        paint.color = Color.parseColor("#F1F5F9")
-        canvas.drawRoundRect(40f, 370f, (PAGE_WIDTH - 40).toFloat(), 480f, 10f, 10f, paint)
+        // Section Divider
+        paint.color = Color.parseColor("#E2E8F0")
+        canvas.drawLine(40f, 302f, (PAGE_WIDTH - 40).toFloat(), 302f, paint)
 
-        paint.style = Paint.Style.STROKE
-        paint.color = Color.parseColor("#CBD5E1")
-        canvas.drawRoundRect(40f, 370f, (PAGE_WIDTH - 40).toFloat(), 480f, 10f, 10f, paint)
-
-        paint.style = Paint.Style.FILL
-        paint.textSize = 12f
+        // Pricing & Payment Details (No tinted box behind - clean white background)
+        paint.textSize = 11f
 
         // Row 1: Sale Price
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.color = Color.parseColor("#1E293B")
         paint.textAlign = Paint.Align.LEFT
-        canvas.drawText("মোট বিক্রয় মূল্য:", 54f, 396f, paint)
+        canvas.drawText("মোট বিক্রয় মূল্য:", 40f, 324f, paint)
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.textAlign = Paint.Align.RIGHT
-        canvas.drawText("৳ ${InventoryViewModel.formatBdt(sale.salePrice)}", (PAGE_WIDTH - 54).toFloat(), 396f, paint)
+        canvas.drawText("৳  ${InventoryViewModel.formatBdt(sale.salePrice)}", (PAGE_WIDTH - 40).toFloat(), 324f, paint)
 
         // Row 2: Paid Amount
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.textAlign = Paint.Align.LEFT
-        canvas.drawText("পরিশোধিত টাকা:", 54f, 420f, paint)
+        canvas.drawText("পরিশোধিত টাকা:", 40f, 344f, paint)
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.color = Color.parseColor("#16A34A")
         paint.textAlign = Paint.Align.RIGHT
-        canvas.drawText("৳ ${InventoryViewModel.formatBdt(sale.paidAmount)}", (PAGE_WIDTH - 54).toFloat(), 420f, paint)
+        canvas.drawText("৳  ${InventoryViewModel.formatBdt(sale.paidAmount)}", (PAGE_WIDTH - 40).toFloat(), 344f, paint)
 
         // Row 3: Due Amount
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.color = if (sale.dueAmount > 0) Color.parseColor("#DC2626") else Color.parseColor("#16A34A")
         paint.textAlign = Paint.Align.LEFT
-        canvas.drawText("বকেয়া / বাকি:", 54f, 444f, paint)
+        canvas.drawText("বকেয়া / বাকি:", 40f, 364f, paint)
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.textAlign = Paint.Align.RIGHT
-        canvas.drawText("৳ ${InventoryViewModel.formatBdt(sale.dueAmount)}", (PAGE_WIDTH - 54).toFloat(), 444f, paint)
+        canvas.drawText("৳  ${InventoryViewModel.formatBdt(sale.dueAmount)}", (PAGE_WIDTH - 40).toFloat(), 364f, paint)
 
         // Row 4: Payment Method
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.color = Color.parseColor("#64748B")
         paint.textAlign = Paint.Align.LEFT
-        canvas.drawText("পেমেন্ট মেথড: ${sale.paymentMethod}", 54f, 468f, paint)
+        canvas.drawText("পেমেন্ট মেথড: ${sale.paymentMethod}", 40f, 384f, paint)
 
-        // Warranty Policy Box (User specified terms)
+        // Warranty Policy Box (ONLY box retained as requested - with yellow/amber background)
         paint.style = Paint.Style.FILL
         paint.color = Color.parseColor("#FEFCE8")
-        canvas.drawRoundRect(40f, 498f, (PAGE_WIDTH - 40).toFloat(), 640f, 10f, 10f, paint)
+        canvas.drawRoundRect(40f, 404f, (PAGE_WIDTH - 40).toFloat(), 544f, 10f, 10f, paint)
 
         paint.style = Paint.Style.STROKE
         paint.color = Color.parseColor("#FEF08A")
-        canvas.drawRoundRect(40f, 498f, (PAGE_WIDTH - 40).toFloat(), 640f, 10f, 10f, paint)
+        canvas.drawRoundRect(40f, 404f, (PAGE_WIDTH - 40).toFloat(), 544f, 10f, 10f, paint)
 
         paint.style = Paint.Style.FILL
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.color = Color.parseColor("#A16207")
-        paint.textSize = 11f
+        paint.textSize = 10.5f
         paint.textAlign = Paint.Align.LEFT
-        canvas.drawText("[ অফিসিয়াল ওয়ারেন্টি ও এক্সচেঞ্জ পলিসি / Warranty Policy ]", 54f, 520f, paint)
+        canvas.drawText("ওয়ারেন্টি ও গ্যারান্টি নীতিমালা / Warranty Policy", 54f, 424f, paint)
 
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.color = Color.parseColor("#451A03")
-        paint.textSize = 10f
-        canvas.drawText("1. 7 Days Replacement Guarantee Without physical Damage & Touch Display.", 54f, 545f, paint)
-        canvas.drawText("2. 2 Years Service Warranty Without Parts & update issue.", 54f, 568f, paint)
-        canvas.drawText("3. 30% - 35% Deducted From Sell Amount and Exchange.", 54f, 591f, paint)
+        paint.textSize = 9.5f
+        canvas.drawText("1. ${shopSettings.warrantyReplacement}", 54f, 446f, paint)
+        canvas.drawText("2. ${shopSettings.warrantyService}", 54f, 467f, paint)
+        canvas.drawText("3. ${shopSettings.warrantyExchangeDeduction}", 54f, 488f, paint)
 
         if (sale.remarks.isNotBlank()) {
             paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC)
             paint.color = Color.parseColor("#78350F")
-            canvas.drawText("বিশেষ নোট: ${sale.remarks}", 54f, 616f, paint)
+            canvas.drawText("বিশেষ নোট: ${sale.remarks}", 54f, 512f, paint)
         }
 
         // Bottom Disclaimers & Signatures
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.color = Color.parseColor("#64748B")
-        paint.textSize = 9f
-        canvas.drawText("* বিক্রিত পণ্য অফেরতযোগ্য। ওয়ারেন্টির জন্য মেমো প্রদর্শন আবশ্যক।", 40f, 665f, paint)
-        canvas.drawText("* APPLE AREA BD থেকে পণ্য ক্রয় করার জন্য আপনাকে ধন্যবাদ!", 40f, 680f, paint)
+        paint.textSize = 8.5f
+        canvas.drawText("* বিক্রিত মাল ফেরত নেওয়া হয় না। ওয়ারেন্টির জন্য মূল ক্যাশমেমো সংরক্ষণ বাধ্যতামূলক।", 40f, 570f, paint)
+        canvas.drawText("* ${shopSettings.shopName} এর সাথে থাকার জন্য ধন্যবাদ!", 40f, 584f, paint)
 
-        // Signature lines
+        // Center QR Code with Equal Signatures on both sides (কিউ আর কোড বরাবর দু'পাশে সমান থাকবে)
+        val qrSize = 60
+        val qrLeft = (PAGE_WIDTH - qrSize) / 2
+        val qrTop = 636
+        try {
+            val qrDrawable = androidx.core.content.ContextCompat.getDrawable(context, com.example.R.drawable.shop_qr_code)
+            if (qrDrawable != null) {
+                qrDrawable.setBounds(qrLeft, qrTop, qrLeft + qrSize, qrTop + qrSize)
+                qrDrawable.draw(canvas)
+            }
+        } catch (_: Exception) {}
+
+        // Signature lines (সমান দৈর্ঘ্য ১৪০ পয়েন্ট এবং সমান উচ্চতা)
         paint.strokeWidth = 1f
         paint.color = Color.parseColor("#94A3B8")
-        canvas.drawLine(54f, 750f, 180f, 750f, paint)
-        canvas.drawLine((PAGE_WIDTH - 180).toFloat(), 750f, (PAGE_WIDTH - 54).toFloat(), 750f, paint)
+        val sigLineY = 672f
+        val leftLineStart = 54f
+        val leftLineEnd = 194f
+        val rightLineStart = (PAGE_WIDTH - 194).toFloat()
+        val rightLineEnd = (PAGE_WIDTH - 54).toFloat()
 
+        canvas.drawLine(leftLineStart, sigLineY, leftLineEnd, sigLineY, paint)
+        canvas.drawLine(rightLineStart, sigLineY, rightLineEnd, sigLineY, paint)
+
+        // Equal Signature Labels below the lines
         paint.textAlign = Paint.Align.CENTER
-        paint.textSize = 10f
+        paint.textSize = 9.5f
         paint.color = Color.parseColor("#334155")
-        canvas.drawText("ক্রেতার স্বাক্ষর", 117f, 768f, paint)
-        canvas.drawText("কর্তৃপক্ষের সিল ও স্বাক্ষর", (PAGE_WIDTH - 117).toFloat(), 768f, paint)
+        val textY = 688f
+        val leftCenter = (leftLineStart + leftLineEnd) / 2
+        val rightCenter = (rightLineStart + rightLineEnd) / 2
+        canvas.drawText("ক্রেতার স্বাক্ষর", leftCenter, textY, paint)
+        canvas.drawText("কর্তৃপক্ষের স্বাক্ষর", rightCenter, textY, paint)
 
         // Footer brand tagline
-        paint.textSize = 9f
+        paint.textAlign = Paint.Align.CENTER
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+        paint.textSize = 8.5f
         paint.color = Color.parseColor("#94A3B8")
-        canvas.drawText("APPLE AREA BD • নির্ভরযোগ্য স্মার্টফোন পার্টনার • www.appleareabd.com", (PAGE_WIDTH / 2).toFloat(), 815f, paint)
+        canvas.drawText("${shopSettings.shopName} • ${shopSettings.shopTagline}", (PAGE_WIDTH / 2).toFloat(), 724f, paint)
     }
-
     /**
      * Saves the PDF to user's device Downloads directory and offers immediate viewing.
      */
     fun savePdfToDownloads(context: Context, sale: Sale, shopSettings: ShopSettings): Uri? {
-        val pdfDocument = createPdfDocument(sale, shopSettings)
-        val fileName = "AppleAreaBD_Invoice_${sale.invoiceNumber}.pdf"
+        val pdfDocument = createPdfDocument(context, sale, shopSettings)
+        val fileName = "${shopSettings.shopName.replace(" ", "_")}_Invoice_${sale.invoiceNumber}.pdf"
         var savedUri: Uri? = null
 
         try {
@@ -367,7 +378,7 @@ object PdfInvoiceGenerator {
                 }
 
                 try {
-                    val pdf = createPdfDocument(sale, shopSettings)
+                    val pdf = createPdfDocument(context, sale, shopSettings)
                     printedPdf = pdf
                     val outputStream = FileOutputStream(destination?.fileDescriptor)
                     pdf.writeTo(outputStream)

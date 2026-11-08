@@ -43,13 +43,29 @@ private val LightColorScheme = lightColorScheme(
     outline = Color(0xFFCBD5E1)
 )
 
+fun parseColorHex(hex: String, defaultColor: Color = AppleBlue): Color {
+    return try {
+        val clean = hex.trim().removePrefix("#")
+        val colorInt = when (clean.length) {
+            6 -> 0xFF000000.toInt() or clean.toLong(16).toInt()
+            8 -> clean.toLong(16).toInt()
+            else -> return defaultColor
+        }
+        Color(colorInt)
+    } catch (e: Exception) {
+        defaultColor
+    }
+}
+
 @Composable
 fun MyApplicationTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    dynamicColor: Boolean = false, // Use our refined brand colors by default
-    content: @Composable () -> Unit,
+    dynamicColor: Boolean = false,
+    primaryColorHex: String = "#0071E3",
+    content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
+    val primaryColor = parseColorHex(primaryColorHex, AppleBlue)
+    val baseScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
             val context = LocalContext.current
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
@@ -58,8 +74,14 @@ fun MyApplicationTheme(
         else -> LightColorScheme
     }
 
+    val customColorScheme = baseScheme.copy(
+        primary = primaryColor,
+        primaryContainer = primaryColor.copy(alpha = 0.15f),
+        onPrimaryContainer = primaryColor
+    )
+
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = customColorScheme,
         typography = Typography,
         content = content
     )

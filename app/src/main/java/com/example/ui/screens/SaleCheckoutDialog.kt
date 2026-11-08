@@ -53,6 +53,8 @@ import com.example.data.model.ShopSettings
 import com.example.ui.theme.AppleBlue
 import com.example.viewmodel.InventoryViewModel
 
+import androidx.compose.foundation.layout.imePadding
+
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun SaleCheckoutDialog(
@@ -100,6 +102,7 @@ fun SaleCheckoutDialog(
         Surface(
             modifier = Modifier
                 .fillMaxWidth(0.95f)
+                .imePadding()
                 .padding(vertical = 24.dp),
             shape = RoundedCornerShape(24.dp),
             color = MaterialTheme.colorScheme.surface
@@ -391,28 +394,22 @@ fun SaleCheckoutDialog(
                 // Action Buttons
                 Button(
                     onClick = {
-                        if (customerName.isBlank()) {
-                            validationError = if (isEnglish) "Please enter customer name." else "ক্রেতার নাম প্রদান করুন।"
-                            return@Button
-                        }
-                        if (customerPhone.isBlank()) {
-                            validationError = if (isEnglish) "Please enter customer phone number." else "ক্রেতার মোবাইল নম্বর প্রদান করুন।"
-                            return@Button
-                        }
+                        val finalCustomerName = customerName.trim().ifBlank { if (isEnglish) "Walk-in Customer" else "সাধারণ ক্রেতা" }
+                        val finalCustomerPhone = customerPhone.trim().ifBlank { "N/A" }
                         if (salePrice <= 0) {
                             validationError = if (isEnglish) "Please enter a valid sale price." else "সঠিক বিক্রয় মূল্য লিখুন।"
                             return@Button
                         }
                         validationError = null
                         onConfirmSale(
-                            customerName,
-                            customerPhone,
-                            customerAddress,
+                            finalCustomerName,
+                            finalCustomerPhone,
+                            customerAddress.trim(),
                             salePrice,
                             paidAmount,
                             paymentMethod,
                             warrantyInfo,
-                            remarks
+                            remarks.trim()
                         )
                     },
                     modifier = Modifier
