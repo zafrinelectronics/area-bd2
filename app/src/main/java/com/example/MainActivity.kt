@@ -85,6 +85,7 @@ import com.example.ui.screens.UserManagementDialog
 import com.example.ui.theme.AppleBlue
 import com.example.ui.theme.MyApplicationTheme
 import com.example.util.ParsedBackupData
+import com.example.util.AppPdfReports
 import com.example.viewmodel.AppTab
 import com.example.viewmodel.InventoryViewModel
 
@@ -469,6 +470,22 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                         IconButton(onClick = { drawerScope.launch { drawerState.open() } }) {
                             Icon(Icons.Default.Menu, contentDescription = "মেনু খুলুন")
                         }
+                    },
+                    actions = {
+                        IconButton(onClick = {
+                            AppPdfReports.export(
+                                context = context,
+                                tab = currentTab,
+                                settings = shopSettings,
+                                products = allProducts,
+                                sales = allSales,
+                                expenses = allExpenses,
+                                employees = allEmployees,
+                                salaries = allSalaryPayments,
+                                metrics = dashboardMetrics,
+                                report = reportData
+                            )
+                        }) { Text("PDF", fontWeight = FontWeight.Bold) }
                     }
                 )
             }
