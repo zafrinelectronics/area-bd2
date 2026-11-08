@@ -440,8 +440,8 @@ fun SettingsScreen(
                             "supplier" -> onSaveSettings(currentSettings.copy(supplierPresets = listOf("Dubai Stock", "USA LL/A", "Singapore ZP/A", "Japan J/A", "Local Dealer", "Customer Exchange")))
                             "variant" -> onSaveSettings(currentSettings.copy(variantPresets = listOf("64GB", "128GB", "256GB", "512GB", "1TB")))
                             "battery" -> onSaveSettings(currentSettings.copy(batteryPresets = listOf("100% (Brand New)", "98%", "95%", "92%", "89%", "85%")))
-                            "box" -> onSaveSettings(currentSettings.copy(boxConditionPresets = listOf("সিল প্যাক (Sealed Box)", "বক্স সহ (Original Box)", "আইএমইআই ম্যাচিং বক্স", "বক্স ছাড়া (Device Only)", "চার্জার সহ")))
-                            "payment" -> onSaveSettings(currentSettings.copy(paymentMethodPresets = listOf("ক্যাশ (Cash)", "বিকাশ (bKash)", "নগদ (Nagad)", "ব্যাংক কার্ড", "ক্যাশ + বিকাশ")))
+                            "box" -> onSaveSettings(currentSettings.copy(boxConditionPresets = listOf("Sealed Box", "Original Box", "IMEI-matching Box", "Device Only", "With Charger")))
+                            "payment" -> onSaveSettings(currentSettings.copy(paymentMethodPresets = listOf("Cash", "বিকাশ (bKash)", "Nagad", "Bank Card", "Cash + bKash")))
                         }
                         showResetCategoryDialog = false
                     },
@@ -856,7 +856,7 @@ fun SettingsScreen(
                             warrantyInfoSaved = false
                         },
                         label = { Text(if (isEnglish) "Replacement Guarantee Policy" else "১. রিপ্লেসমেন্ট গ্যারান্টি শর্ত", fontSize = 12.sp) },
-                        placeholder = { Text("৭ দিন রিপ্লেসমেন্ট গ্যারান্টি (ডিসপ্লে ও পানি ব্যতীত)", fontSize = 12.sp) },
+                        placeholder = { Text("7-day replacement guarantee (excluding display and water damage)", fontSize = 12.sp) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("warranty_replacement_input"),
@@ -872,7 +872,7 @@ fun SettingsScreen(
                             warrantyInfoSaved = false
                         },
                         label = { Text(if (isEnglish) "Service Warranty Policy" else "২. সার্ভিস ওয়ারেন্টি শর্ত", fontSize = 12.sp) },
-                        placeholder = { Text("২ বছর ফ্রি সার্ভিস ওয়ারেন্টি (পার্টস ব্যতীত)", fontSize = 12.sp) },
+                        placeholder = { Text("2-year free service warranty (excluding parts)", fontSize = 12.sp) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("warranty_service_input"),
@@ -888,7 +888,7 @@ fun SettingsScreen(
                             warrantyInfoSaved = false
                         },
                         label = { Text(if (isEnglish) "Exchange & Return Deduction Policy" else "৩. এক্সচেঞ্জ ও মূল্য কর্তন পলিসি", fontSize = 12.sp) },
-                        placeholder = { Text("১৫ দিন পর পণ্য ফেরত বা এক্সচেঞ্জে ২০% কর্তন করা হবে", fontSize = 12.sp) },
+                        placeholder = { Text("A 20% deduction applies to returns or exchanges after 15 days.", fontSize = 12.sp) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("warranty_deduction_input"),
@@ -904,7 +904,7 @@ fun SettingsScreen(
                             warrantyInfoSaved = false
                         },
                         label = { Text(if (isEnglish) "Memo Footer / Disclaimer Note" else "৪. মেমো ফুটনোট বা বিশেষ বার্তা", fontSize = 12.sp) },
-                        placeholder = { Text("বিক্রিত পণ্য ফেরতযোগ্য নয়। মেমো ও বক্স ব্যতীত কোনো ওয়ারেন্টি দাবি কার্যকর হবে না।", fontSize = 12.sp) },
+                        placeholder = { Text("Sold products are non-refundable. Warranty claims require the memo and original box.", fontSize = 12.sp) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("memo_footer_note_input"),
@@ -947,7 +947,7 @@ fun SettingsScreen(
                             if (memoFooterNote.isNotBlank()) {
                                 HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f), modifier = Modifier.padding(vertical = 2.dp))
                                 Text(
-                                    text = "নোট: $memoFooterNote",
+                                    text = "Note: $memoFooterNote",
                                     fontSize = 10.sp,
                                     fontStyle = androidx.compose.ui.text.font.FontStyle.Italic,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -991,10 +991,10 @@ fun SettingsScreen(
                     ) {
                         OutlinedButton(
                             onClick = {
-                                warrantyReplacement = "৭ দিন রিপ্লেসমেন্ট গ্যারান্টি (ডিসপ্লে ও পানি ব্যতীত)"
-                                warrantyService = "২ বছর ফ্রি সার্ভিস ওয়ারেন্টি (পার্টস ব্যতীত)"
-                                warrantyExchangeDeduction = "১৫ দিন পর পণ্য ফেরত বা এক্সচেঞ্জে ২০% কর্তন করা হবে"
-                                memoFooterNote = "বিক্রিত পণ্য ফেরতযোগ্য নয়। মেমো ও বক্স ব্যতীত কোনো ওয়ারেন্টি দাবি কার্যকর হবে না। আমাদের সাথে থাকার জন্য ধন্যবাদ।"
+                                warrantyReplacement = "7-day replacement guarantee (excluding display and water damage)"
+                                warrantyService = "2-year free service warranty (excluding parts)"
+                                warrantyExchangeDeduction = "A 20% deduction applies to returns or exchanges after 15 days."
+                                memoFooterNote = "Sold products are non-refundable. Warranty claims require the memo and original box. Thank you for shopping with us."
                                 onSaveSettings(
                                     currentSettings.copy(
                                         warrantyReplacement = warrantyReplacement,
@@ -1432,13 +1432,13 @@ fun SettingsScreen(
                         horizontalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         val categories = listOf(
-                            Triple("company", "🏢 কোম্পানি", "Company"),
-                            Triple("color", "🎨 কালার", "Color"),
-                            Triple("supplier", "🚚 সাপ্লায়ার", "Supplier"),
-                            Triple("variant", "💾 ভ্যারিয়েন্ট", "Variant"),
-                            Triple("battery", "🔋 ব্যাটারি", "Battery"),
-                            Triple("box", "📦 বক্সের অবস্থা", "Box"),
-                            Triple("payment", "💳 পেমেন্ট মাধ্যম", "Payment")
+                            Triple("company", "🏢 Company", "Company"),
+                            Triple("color", "🎨 Color", "Color"),
+                            Triple("supplier", "🚚 Supplier", "Supplier"),
+                            Triple("variant", "💾 Variant", "Variant"),
+                            Triple("battery", "🔋 Battery", "Battery"),
+                            Triple("box", "📦 Box Condition", "Box Condition"),
+                            Triple("payment", "💳 Payment Method", "Payment")
                         )
 
                         categories.forEach { (catId, bnLabel, enLabel) ->
