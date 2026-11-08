@@ -165,6 +165,10 @@ fun DashboardScreen(
                         }
                     }
 
+                }
+            }
+        }
+
         // User Profile & Admin Controls Bar
         item {
             Card(
@@ -223,7 +227,7 @@ fun DashboardScreen(
                             ) {
                                 Icon(Icons.Default.AdminPanelSettings, contentDescription = null, modifier = Modifier.size(14.dp))
                                 Spacer(modifier = Modifier.width(4.dp))
-                                Text("ইউজার কন্ট্রোল", fontSize = 10.5.sp, fontWeight = FontWeight.Bold)
+                                Text("User Management", fontSize = 10.5.sp, fontWeight = FontWeight.Bold)
                             }
                         }
 
@@ -237,7 +241,7 @@ fun DashboardScreen(
                         ) {
                             Icon(Icons.Default.Logout, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(14.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("লগআউট", fontSize = 10.5.sp, color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
+                            Text("Logout", fontSize = 10.5.sp, color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -376,7 +380,7 @@ fun DashboardScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "আজকের ক্যাশ হিসাব",
+                                text = "Today’s Cash Summary",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 11.sp
@@ -423,7 +427,7 @@ fun DashboardScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "${metrics.totalStaffCount} জন কর্মরত স্টাফ",
+                                text = "${metrics.totalStaffCount} Active Staff",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 fontSize = 11.sp
@@ -646,7 +650,7 @@ fun ProductItemCard(
 
                 val (statusBg, statusTextColor, statusLabel) = when (product.status) {
                     ProductStatus.IN_STOCK.name -> Triple(Color(0xFFD1FAE5), Color(0xFF065F46), strings.statusInStock)
-                    ProductStatus.RETURNED.name -> Triple(Color(0xFFFEF3C7), Color(0xFFB45309), "রিটার্নড (Returned)")
+                    ProductStatus.RETURNED.name -> Triple(Color(0xFFFEF3C7), Color(0xFFB45309), "Returned")
                     else -> Triple(Color(0xFFE2E8F0), Color(0xFF475569), strings.statusSold)
                 }
 
@@ -747,7 +751,7 @@ fun ProductItemCard(
                             Icon(imageVector = Icons.Default.AssignmentReturn, contentDescription = "Return", tint = Color(0xFFB45309), modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
                             Text(
-                                text = "রিটার্নের কারণ: ${product.returnReason.ifBlank { "সাধারণ রিটার্ন" }}",
+                                text = "Return reason: ${product.returnReason.ifBlank { "General return" }}",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color(0xFF92400E)
@@ -755,7 +759,7 @@ fun ProductItemCard(
                         }
                         if (product.returnRefundAmount > 0.0) {
                             Text(
-                                text = "সাপ্লায়ার থেকে ফেরত অর্থ: ৳ ${InventoryViewModel.formatAmount(product.returnRefundAmount, lang)}",
+                                text = "Supplier refund: ৳ ${InventoryViewModel.formatAmount(product.returnRefundAmount, lang)}",
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.SemiBold,
                                 color = Color(0xFF047857)
@@ -763,7 +767,7 @@ fun ProductItemCard(
                         }
                         if (product.returnNotes.isNotBlank()) {
                             Text(
-                                text = "নোট: ${product.returnNotes}",
+                                text = "Notes: ${product.returnNotes}",
                                 fontSize = 10.sp,
                                 color = Color(0xFF78350F)
                             )
@@ -804,7 +808,7 @@ fun ProductItemCard(
                         ) {
                             Icon(imageVector = Icons.Default.AssignmentReturn, contentDescription = "Return", tint = Color(0xFFD97706), modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("রিটার্ন", fontSize = 12.sp, color = Color(0xFFD97706), fontWeight = FontWeight.SemiBold)
+                            Text("Return", fontSize = 12.sp, color = Color(0xFFD97706), fontWeight = FontWeight.SemiBold)
                         }
                     }
 
@@ -832,7 +836,7 @@ fun ProductItemCard(
                         ) {
                             Icon(imageVector = Icons.Default.SettingsBackupRestore, contentDescription = "Restore", modifier = Modifier.size(16.dp))
                             Spacer(modifier = Modifier.width(6.dp))
-                            Text("পুনরায় স্টকে নিন", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            Text("Restore to Stock", fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
