@@ -224,46 +224,6 @@ fun StockScreen(
                         Text(if (isEnglish) "Bulk Add (Multiple)" else "বাল্ক স্টক যোগ", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                     }
 
-                    // Live Online Cloud Sync Button
-                    Surface(
-                        shape = RoundedCornerShape(12.dp),
-                        color = if (hasGitHubConfigured) {
-                            if (isSyncing) Color(0xFF3B82F6).copy(alpha = 0.15f)
-                            else Color(0xFF10B981).copy(alpha = 0.15f)
-                        } else {
-                            Color(0xFFF59E0B).copy(alpha = 0.15f)
-                        },
-                        modifier = Modifier
-                            .height(44.dp)
-                            .clickable {
-                                if (hasGitHubConfigured) onTriggerSyncNow()
-                                else onGitHubSyncClick()
-                            }
-                            .testTag("stock_github_sync_button")
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(horizontal = 10.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = if (hasGitHubConfigured) Icons.Default.CloudDone else Icons.Default.CloudSync,
-                                contentDescription = "Cloud Sync",
-                                tint = if (hasGitHubConfigured) Color(0xFF047857) else Color(0xFFB45309),
-                                modifier = Modifier.size(18.dp)
-                            )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = if (hasGitHubConfigured) {
-                                    if (isSyncing) (if (isEnglish) "Syncing..." else "সিঙ্ক...") else (if (isEnglish) "Live" else "অনলাইন")
-                                } else {
-                                    if (isEnglish) "Cloud" else "ক্লাউড"
-                                },
-                                fontSize = 11.sp,
-                                fontWeight = FontWeight.Bold,
-                                color = if (hasGitHubConfigured) Color(0xFF047857) else Color(0xFFB45309)
-                            )
-                        }
-                    }
                 }
             }
 
