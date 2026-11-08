@@ -21,6 +21,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
@@ -102,7 +103,7 @@ class MainActivity : ComponentActivity() {
             val shopSettings by viewModel.shopSettings.collectAsStateWithLifecycle()
             val currentStrings = if (shopSettings.appLanguage.equals("EN", ignoreCase = true)) EnglishStrings else BanglaStrings
             val currentDensity = LocalDensity.current
-            val customDensity = remember(currentDensity, shopSettings.textScale) {
+            val customDensity = remember(currentDensity) {
                 Density(
                     density = currentDensity.density,
                     fontScale = currentDensity.fontScale
@@ -166,6 +167,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainAppContent(viewModel: InventoryViewModel) {
     val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -233,10 +235,10 @@ fun MainAppContent(viewModel: InventoryViewModel) {
     }
 
     val currentDensity = LocalDensity.current
-    val customDensity = remember(currentDensity, shopSettings.textScale) {
+    val customDensity = remember(currentDensity) {
         Density(
             density = currentDensity.density,
-            fontScale = currentDensity.fontScale * shopSettings.textScale
+            fontScale = currentDensity.fontScale
         )
     }
 
