@@ -50,7 +50,11 @@ object AppPdfReports {
                     "মোট বিক্রয় সংখ্যা" to metrics.totalSalesCount.toString(),
                     "মোট বিক্রয়" to money(metrics.totalRevenue),
                     "মোট পণ্য লাভ (অন্যান্য খরচের আগে)" to money(metrics.totalProfit),
+                    "মোট খরচ" to money(expenses.filter { it.type == "EXPENSE" }.sumOf { it.amount }),
+                    "অতিরিক্ত আয়" to money(expenses.filter { it.type == "INCOME" }.sumOf { it.amount }),
                     "মোট বকেয়া" to money(metrics.totalDue),
+                    "নগদ প্রবাহের আনুমানিক ব্যালেন্স (আদায় + অন্যান্য আয় - খরচ)" to money(sales.sumOf { it.paidAmount } + expenses.filter { it.type == "INCOME" }.sumOf { it.amount } - expenses.filter { it.type == "EXPENSE" }.sumOf { it.amount }),
+                    "আনুমানিক লাভ/ক্ষতি (পণ্য লাভ + অন্যান্য আয় - খরচ)" to money(metrics.totalProfit + expenses.filter { it.type == "INCOME" }.sumOf { it.amount } - expenses.filter { it.type == "EXPENSE" }.sumOf { it.amount }),
                     "আজকের নেট ব্যালেন্স" to money(metrics.todayNetBalance),
                     "কর্মচারী সংখ্যা" to metrics.totalStaffCount.toString()
                 ))
