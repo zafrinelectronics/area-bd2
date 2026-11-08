@@ -26,6 +26,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.Scaffold
@@ -50,7 +52,6 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.example.ui.BanglaStrings
 import com.example.ui.EnglishStrings
 import com.example.ui.LocalAppStrings
 import com.example.ui.components.GitHubSyncDialog
@@ -102,7 +103,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val shopSettings by viewModel.shopSettings.collectAsStateWithLifecycle()
-            val currentStrings = if (shopSettings.appLanguage.equals("EN", ignoreCase = true)) EnglishStrings else BanglaStrings
+            val currentStrings = EnglishStrings
             val currentDensity = LocalDensity.current
             val customDensity = remember(currentDensity) {
                 Density(
@@ -430,17 +431,17 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                     androidx.compose.foundation.layout.Column(modifier = Modifier.padding(12.dp)) {
                         Text("Apple Area Shop", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(16.dp))
                         val menuItems = listOf(
-                            "ড্যাশবোর্ড" to AppTab.DASHBOARD,
-                            "স্টক / পণ্য" to AppTab.STOCK,
-                            "সেলস" to AppTab.SALES,
-                            "পারচেজ" to AppTab.PURCHASE,
-                            "কাস্টমার" to AppTab.CUSTOMERS,
-                            "সাপ্লায়ার" to AppTab.SUPPLIERS,
-                            "লেনদেন" to AppTab.TRANSACTIONS,
-                            "খরচ / ক্যাশবুক" to AppTab.EXPENSES,
-                            "কর্মচারী ও বেতন" to AppTab.EMPLOYEES,
-                            "রিপোর্ট" to AppTab.REPORTS,
-                            "সেটিংস" to AppTab.SETTINGS
+                            "Dashboard" to AppTab.DASHBOARD,
+                            "Stock" to AppTab.STOCK,
+                            "Sell" to AppTab.SALES,
+                            "Purchase" to AppTab.PURCHASE,
+                            "Customers" to AppTab.CUSTOMERS,
+                            "Suppliers" to AppTab.SUPPLIERS,
+                            "Transactions" to AppTab.TRANSACTIONS,
+                            "Expenses / Cashbook" to AppTab.EXPENSES,
+                            "Employees & Salary" to AppTab.EMPLOYEES,
+                            "Reports" to AppTab.REPORTS,
+                            "Settings" to AppTab.SETTINGS
                         )
                         menuItems.forEach { (label, tab) ->
                             NavigationDrawerItem(
@@ -451,7 +452,7 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                             )
                         }
                         NavigationDrawerItem(
-                            label = { Text("লগআউট") },
+                            label = { Text("Logout") },
                             selected = false,
                             onClick = { viewModel.logout(); drawerScope.launch { drawerState.close() } },
                             modifier = Modifier.padding(vertical = 2.dp)
@@ -463,12 +464,34 @@ fun MainAppContent(viewModel: InventoryViewModel) {
         Scaffold(
             modifier = Modifier.fillMaxSize().imePadding(),
             snackbarHost = { SnackbarHost(snackbarHostState) },
+            bottomBar = {
+                NavigationBar {
+                    val bottomTabs = listOf(
+                        Triple(AppTab.DASHBOARD, "Dashboard", Icons.Default.Dashboard),
+                        Triple(AppTab.STOCK, "Stock", Icons.Default.Inventory2),
+                        Triple(AppTab.SALES, "Sell", Icons.Default.PointOfSale),
+                        Triple(AppTab.EXPENSES, "Expenses", Icons.Default.Payments),
+                        Triple(AppTab.EMPLOYEES, "Staff", Icons.Default.Badge),
+                        Triple(AppTab.REPORTS, "Reports", Icons.Default.Assessment),
+                        Triple(AppTab.SETTINGS, "Settings", Icons.Default.Settings)
+                    )
+                    bottomTabs.forEach { (tab, label, icon) ->
+                        NavigationBarItem(
+                            selected = currentTab == tab,
+                            onClick = { viewModel.setTab(tab) },
+                            icon = { Icon(imageVector = icon, contentDescription = label) },
+                            label = { Text(label, fontSize = 9.sp, maxLines = 1) },
+                            alwaysShowLabel = true
+                        )
+                    }
+                }
+            },
             topBar = {
                 TopAppBar(
                     title = { Text("Apple Area Shop") },
                     navigationIcon = {
                         IconButton(onClick = { drawerScope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, contentDescription = "মেনু খুলুন")
+                            Icon(Icons.Default.Menu, contentDescription = "Open menu")
                         }
                     },
                     actions = {
