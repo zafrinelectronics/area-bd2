@@ -69,7 +69,6 @@ import com.example.ui.screens.MoreScreen
 import com.example.ui.screens.PurchaseScreen
 import com.example.ui.screens.CustomersScreen
 import com.example.ui.screens.SuppliersScreen
-import com.example.ui.screens.DeliveryAgencyScreen
 import com.example.ui.screens.TransactionsScreen
 import com.example.ui.screens.NoInternetScreen
 import com.example.util.NetworkMonitor
@@ -540,7 +539,6 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                     )
                     AppTab.CUSTOMERS -> CustomersScreen(sales = allSales)
                     AppTab.SUPPLIERS -> SuppliersScreen(products = allProducts)
-                    AppTab.DELIVERY -> DeliveryAgencyScreen()
                     AppTab.TRANSACTIONS -> TransactionsScreen(sales = allSales, expenses = allExpenses)
                     AppTab.REPORTS -> ReportsScreen(
                         report = reportData,
