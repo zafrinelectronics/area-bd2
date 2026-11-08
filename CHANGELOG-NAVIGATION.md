@@ -5,7 +5,6 @@
 - Replaced the previous six-item bottom bar with the requested five positions: Dashboard, Transactions, central Add (+), Reports, and More.
 - Added a More menu with shortcuts to existing Sales, Stock/Product, Expenses/Transactions, Reports, Employees, and Settings screens, plus Logout.
 - Purchase, Customers, Suppliers, and HRM shortcuts currently open the closest existing screens because dedicated workflows/data screens are not implemented yet.
-- Delivery Agency is clearly marked as a future feature and is not represented as functional.
 - No Room entities, database version, or existing stored records were changed in this navigation step.
 
 ## Verification limits
