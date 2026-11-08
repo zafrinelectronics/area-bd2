@@ -104,6 +104,11 @@ class MainActivity : ComponentActivity() {
         setContent {
             val shopSettings by viewModel.shopSettings.collectAsStateWithLifecycle()
             val currentStrings = EnglishStrings
+            LaunchedEffect(shopSettings.appLanguage) {
+                if (!shopSettings.appLanguage.equals("EN", ignoreCase = true)) {
+                    viewModel.updateShopSettings(shopSettings.copy(appLanguage = "EN"))
+                }
+            }
             val currentDensity = LocalDensity.current
             val customDensity = remember(currentDensity) {
                 Density(
@@ -244,7 +249,7 @@ fun MainAppContent(viewModel: InventoryViewModel) {
         )
     }
 
-    val currentStrings = if (shopSettings.appLanguage.equals("EN", ignoreCase = true)) EnglishStrings else BanglaStrings
+    val currentStrings = EnglishStrings
 
     CompositionLocalProvider(
         LocalDensity provides customDensity,
