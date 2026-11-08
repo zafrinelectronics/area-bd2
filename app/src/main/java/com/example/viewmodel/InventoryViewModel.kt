@@ -46,7 +46,6 @@ enum class AppTab {
     PURCHASE,
     CUSTOMERS,
     SUPPLIERS,
-    DELIVERY,
     TRANSACTIONS,
     REPORTS,
     SETTINGS,
