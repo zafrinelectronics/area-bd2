@@ -497,7 +497,7 @@ fun SettingsScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = if (isEnglish) "Text Size & Interface Scale" else "অ্যাপের লেখার সাইজ ছোট করার সেটিংস",
+                                text = "Manage shop and account settings",
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -509,7 +509,7 @@ fun SettingsScreen(
                             .background(AppleBlue.copy(alpha = 0.12f), CircleShape),
                         contentAlignment = Alignment.Center
                     ) {
-                        Icon(imageVector = Icons.Default.FormatSize, contentDescription = null, tint = AppleBlue)
+                        Icon(imageVector = Icons.Default.Settings, contentDescription = null, tint = AppleBlue)
                     }
                 }
             }
@@ -554,7 +554,7 @@ fun SettingsScreen(
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
-                                text = "লগইন: ${currentUser?.username ?: "CONOCK"} (${if (currentUser?.isAdmin == true) "এডমিন" else "স্টাফ"})",
+                                text = "Login: ${currentUser?.username ?: "CONOCK"} (${if (currentUser?.isAdmin == true) "Admin" else "Staff"})",
                                 fontSize = 10.5.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
@@ -569,7 +569,7 @@ fun SettingsScreen(
                                 shape = RoundedCornerShape(8.dp),
                                 modifier = Modifier.height(34.dp)
                             ) {
-                                Text("ইউজার কন্ট্রোল", fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                Text("User Management", fontSize = 11.sp, fontWeight = FontWeight.Bold)
                             }
                         }
 
@@ -579,102 +579,8 @@ fun SettingsScreen(
                             modifier = Modifier.height(34.dp),
                             border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444).copy(alpha = 0.6f))
                         ) {
-                            Text("লগআউট", color = Color(0xFFEF4444), fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Text("Logout", color = Color(0xFFEF4444), fontSize = 11.sp, fontWeight = FontWeight.Bold)
                         }
-                    }
-                }
-            }
-        }
-
-        // Language Selection Card
-        item {
-            ElevatedCard(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(
-                    modifier = Modifier.padding(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(34.dp)
-                                    .background(Color(0xFF8B5CF6).copy(alpha = 0.12f), CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Language,
-                                    contentDescription = null,
-                                    tint = Color(0xFF8B5CF6),
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(
-                                    text = if (isEnglish) "App Language" else "অ্যাপের ভাষা পরিবর্তন",
-                                    fontSize = 14.5.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = if (isEnglish) "Choose Bengali or English" else "বাংলা অথবা ইংরেজি ভাষা নির্বাচন করুন",
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-                    }
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(10.dp)
-                    ) {
-                        val isBn = currentSettings.appLanguage.equals("BN", ignoreCase = true)
-                        FilterChip(
-                            selected = isBn,
-                            onClick = {
-                                onSaveSettings(currentSettings.copy(appLanguage = "BN"))
-                            },
-                            label = {
-                                Text("🇧🇩 বাংলা (Bengali)", fontSize = 12.sp, fontWeight = if (isBn) FontWeight.Bold else FontWeight.Medium)
-                            },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = Color(0xFF047857),
-                                selectedLabelColor = Color.White
-                            ),
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(40.dp)
-                                .testTag("lang_chip_bn")
-                        )
-
-                        val isEn = currentSettings.appLanguage.equals("EN", ignoreCase = true)
-                        FilterChip(
-                            selected = isEn,
-                            onClick = {
-                                onSaveSettings(currentSettings.copy(appLanguage = "EN"))
-                            },
-                            label = {
-                                Text("🇺🇸 English (ইংরেজি)", fontSize = 12.sp, fontWeight = if (isEn) FontWeight.Bold else FontWeight.Medium)
-                            },
-                            colors = FilterChipDefaults.filterChipColors(
-                                selectedContainerColor = AppleBlue,
-                                selectedLabelColor = Color.White
-                            ),
-                            shape = RoundedCornerShape(10.dp),
-                            modifier = Modifier
-                                .weight(1f)
-                                .height(40.dp)
-                                .testTag("lang_chip_en")
-                        )
                     }
                 }
             }
@@ -1744,105 +1650,5 @@ fun SettingsScreen(
             }
         }
 
-        // GitHub.com Automatic Backup & Repository Sync Card
-        item {
-            ElevatedCard(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(18.dp),
-                colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surface),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Column(
-                    modifier = Modifier.padding(18.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Box(
-                                modifier = Modifier
-                                    .size(34.dp)
-                                    .background(Color(0xFF24292F), CircleShape),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.Code,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
-                                Text(
-                                    text = "GitHub.com অটো-সেভ ও সিঙ্ক",
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                Text(
-                                    text = "কোনো অ্যাপ লগিন ছাড়াই সরাসরি গিটহাবে ব্যাকআপ",
-                                    fontSize = 11.sp,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
-                        }
-
-                        Surface(
-                            shape = RoundedCornerShape(10.dp),
-                            color = if (lastSyncTime > 0L) Color(0xFF10B981).copy(alpha = 0.15f) else Color(0xFF3B82F6).copy(alpha = 0.15f)
-                        ) {
-                            Row(
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Default.CheckCircle,
-                                    contentDescription = null,
-                                    tint = if (lastSyncTime > 0L) Color(0xFF059669) else Color(0xFF2563EB),
-                                    modifier = Modifier.size(12.dp)
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = if (lastSyncTime > 0L) "সিঙ্ক সক্রিয়" else "অটো-পুশ প্রস্তুত",
-                                    color = if (lastSyncTime > 0L) Color(0xFF059669) else Color(0xFF1D4ED8),
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
-
-                    Text(
-                        text = "দোকানের লোকাল ডাটাবেসের যাবতীয় ফোন স্টক, বিক্রয় চালান, আয়-ব্যয় ও কর্মচারীর বেতন সরাসরি আপনার github.com রিপোজিটরিতে স্বয়ংক্রিয়ভাবে সেভ হবে।",
-                        fontSize = 11.5.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        lineHeight = 16.sp
-                    )
-
-                    Button(
-                        onClick = onOpenGitHubSync,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(46.dp)
-                            .testTag("settings_open_github_sync_button"),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF24292F)),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Icon(imageVector = Icons.Default.Code, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.White)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(
-                            text = "GitHub.com রিপোজিটরি সিঙ্ক ও ব্যাকআপ ডায়ালগ",
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 12.sp,
-                            color = Color.White
-                        )
-                    }
-                }
-            }
-            Spacer(modifier = Modifier.height(80.dp))
-        }
     }
 }
