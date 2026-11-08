@@ -17,11 +17,16 @@ import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.Payments
 import androidx.compose.material.icons.filled.PointOfSale
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -32,6 +37,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -98,7 +105,7 @@ class MainActivity : ComponentActivity() {
             val customDensity = remember(currentDensity, shopSettings.textScale) {
                 Density(
                     density = currentDensity.density,
-                    fontScale = currentDensity.fontScale * shopSettings.textScale
+                    fontScale = currentDensity.fontScale
                 )
             }
 
@@ -212,6 +219,8 @@ fun MainAppContent(viewModel: InventoryViewModel) {
 
     val context = LocalContext.current
     var showGitHubSyncDialog by remember { mutableStateOf(false) }
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val drawerScope = rememberCoroutineScope()
 
     val snackbarMsg by viewModel.snackbarMessage.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -411,47 +420,55 @@ fun MainAppContent(viewModel: InventoryViewModel) {
             }
         }
 
-        Scaffold(
-            modifier = Modifier
-                .fillMaxSize()
-                .imePadding(),
-            snackbarHost = { SnackbarHost(snackbarHostState) },
-            bottomBar = {
-                NavigationBar(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    tonalElevation = 6.dp
-                ) {
-                    NavigationBarItem(
-                        selected = currentTab == AppTab.DASHBOARD,
-                        onClick = { viewModel.setTab(AppTab.DASHBOARD) },
-                        icon = { Icon(Icons.Default.Dashboard, contentDescription = "Dashboard") },
-                        label = { Text("Dashboard", fontSize = 9.sp, fontWeight = FontWeight.SemiBold) }
-                    )
-                    NavigationBarItem(
-                        selected = currentTab == AppTab.EXPENSES,
-                        onClick = { viewModel.setTab(AppTab.EXPENSES) },
-                        icon = { Icon(Icons.Default.Payments, contentDescription = "Transactions") },
-                        label = { Text("লেনদেন", fontSize = 9.sp, fontWeight = FontWeight.SemiBold) }
-                    )
-                    NavigationBarItem(
-                        selected = false,
-                        onClick = { viewModel.openAddProduct() },
-                        icon = { Text("+", fontSize = 25.sp, fontWeight = FontWeight.Bold) },
-                        label = { Text("যোগ", fontSize = 9.sp, fontWeight = FontWeight.SemiBold) }
-                    )
-                    NavigationBarItem(
-                        selected = currentTab == AppTab.REPORTS,
-                        onClick = { viewModel.setTab(AppTab.REPORTS) },
-                        icon = { Icon(Icons.Default.Assessment, contentDescription = "Reports") },
-                        label = { Text("রিপোর্ট", fontSize = 9.sp, fontWeight = FontWeight.SemiBold) }
-                    )
-                    NavigationBarItem(
-                        selected = currentTab == AppTab.MORE,
-                        onClick = { viewModel.setTab(AppTab.MORE) },
-                        icon = { Icon(Icons.Default.Settings, contentDescription = "More") },
-                        label = { Text("More", fontSize = 9.sp, fontWeight = FontWeight.SemiBold) }
-                    )
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = {
+                ModalDrawerSheet {
+                    androidx.compose.foundation.layout.Column(modifier = Modifier.padding(12.dp)) {
+                        Text("Apple Area Shop", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(16.dp))
+                        val menuItems = listOf(
+                            "ড্যাশবোর্ড" to AppTab.DASHBOARD,
+                            "স্টক / পণ্য" to AppTab.STOCK,
+                            "সেলস" to AppTab.SALES,
+                            "পারচেজ" to AppTab.PURCHASE,
+                            "কাস্টমার" to AppTab.CUSTOMERS,
+                            "সাপ্লায়ার" to AppTab.SUPPLIERS,
+                            "লেনদেন" to AppTab.TRANSACTIONS,
+                            "খরচ / ক্যাশবুক" to AppTab.EXPENSES,
+                            "কর্মচারী ও বেতন" to AppTab.EMPLOYEES,
+                            "রিপোর্ট" to AppTab.REPORTS,
+                            "সেটিংস" to AppTab.SETTINGS
+                        )
+                        menuItems.forEach { (label, tab) ->
+                            NavigationDrawerItem(
+                                label = { Text(label) },
+                                selected = currentTab == tab,
+                                onClick = { viewModel.setTab(tab); drawerScope.launch { drawerState.close() } },
+                                modifier = Modifier.padding(vertical = 2.dp)
+                            )
+                        }
+                        NavigationDrawerItem(
+                            label = { Text("লগআউট") },
+                            selected = false,
+                            onClick = { viewModel.logout(); drawerScope.launch { drawerState.close() } },
+                            modifier = Modifier.padding(vertical = 2.dp)
+                        )
+                    }
                 }
+            }
+        ) {
+        Scaffold(
+            modifier = Modifier.fillMaxSize().imePadding(),
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            topBar = {
+                TopAppBar(
+                    title = { Text("Apple Area Shop") },
+                    navigationIcon = {
+                        IconButton(onClick = { drawerScope.launch { drawerState.open() } }) {
+                            Icon(Icons.Default.Menu, contentDescription = "মেনু খুলুন")
+                        }
+                    }
+                )
             }
         ) { innerPadding ->
             Box(
@@ -564,6 +581,7 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                     )
                 }
             }
+        }
         }
     }
 }
