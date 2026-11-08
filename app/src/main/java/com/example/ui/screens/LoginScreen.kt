@@ -76,7 +76,6 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
     val loginError by viewModel.loginError.collectAsStateWithLifecycle()
-    val isSyncing by viewModel.isGitHubSyncing.collectAsStateWithLifecycle()
     val strings = LocalAppStrings.current
     val isEnglish = strings.tabDashboard == "Dashboard"
 
@@ -99,51 +98,6 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Language & Cloud Sync Quick Bar
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                OutlinedButton(
-                    onClick = onOpenGitHubSync,
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.testTag("login_cloud_sync_button")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.CloudSync,
-                        contentDescription = "Cloud Sync",
-                        tint = AppleBlue,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(6.dp))
-                    Text(
-                        text = if (isEnglish) "Cloud Database Sync" else "ক্লাউড সিঙ্ক (GitHub)",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Medium
-                    )
-                }
-
-                OutlinedButton(
-                    onClick = onToggleLanguage,
-                    shape = RoundedCornerShape(10.dp),
-                    modifier = Modifier.testTag("login_language_toggle_button")
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Language,
-                        contentDescription = "Language",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = if (isEnglish) "বাংলা" else "English",
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
-
             // Logo & Shop Header
             Image(
                 painter = painterResource(id = R.drawable.shop_logo),
@@ -282,7 +236,7 @@ fun LoginScreen(
                     // Login Button
                     Button(
                         onClick = { attemptLogin() },
-                        enabled = !isSyncing,
+                        enabled = true,
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(48.dp)
@@ -293,23 +247,13 @@ fun LoginScreen(
                         Icon(imageVector = Icons.Default.Login, contentDescription = "Login")
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
-                            text = if (isSyncing) (if (isEnglish) "Syncing..." else "সিঙ্ক হচ্ছে...") else strings.btnLoginSubmit,
+                            text = strings.btnLoginSubmit,
                             fontSize = 15.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White
                         )
                     }
 
-                    // Multi-device sync note
-                    Text(
-                        text = if (isEnglish) "💡 Tip: Data syncs automatically across all installed devices via Cloud Database." else "💡 যেকোনো ডিভাইস থেকে লগইন করতে ক্লাউড সিঙ্ক থেকে আপনার রিপোসিটরি কনফিগার করে নিন।",
-                        fontSize = 10.5.sp,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 4.dp)
-                    )
                 }
             }
         }
