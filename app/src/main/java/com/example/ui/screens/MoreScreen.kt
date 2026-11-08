@@ -32,7 +32,6 @@ fun MoreScreen(onNavigate: (AppTab) -> Unit, onLogout: () -> Unit) {
         MenuEntry("রিপোর্ট (Reports)", "বিক্রি ও লাভের প্রতিবেদন", AppTab.REPORTS),
         MenuEntry("কর্মচারী (Employees)", "কর্মচারী ও বেতন", AppTab.EMPLOYEES),
         MenuEntry("HRM", "কর্মচারী ব্যবস্থাপনা ও বেতন", AppTab.EMPLOYEES),
-        MenuEntry("ডেলিভারি এজেন্সি", "ডেলিভারি এজেন্সির তথ্য ও বর্তমান অবস্থা", AppTab.DELIVERY),
         MenuEntry("সেটিংস", "দোকান ও অ্যাপের সেটিংস", AppTab.SETTINGS)
     )
     LazyColumn(
