@@ -553,32 +553,54 @@ class InventoryRepository(
             }
         }
 
-        // Smart Merge Sales by invoiceNumber
+        // Remap product references by IMEI because Room IDs can differ by device.
+        val mergedProducts = productDao.getAllProductsSync()
+        val productIdByImei = mergedProducts.filter { it.imei.isNotBlank() }.associate { it.imei to it.id }
+
+        // Smart Merge Sales by invoiceNumber, preserving local product references.
         val localSales = saleDao.getAllSalesSync()
         val localInvoiceSet = localSales.map { it.invoiceNumber }.toSet()
-        val salesToInsert = sales.filter { it.invoiceNumber !in localInvoiceSet }
-        if (salesToInsert.isNotEmpty()) {
-            salesToInsert.forEach { saleDao.insertSale(it.copy(id = 0L)) }
+        sales.filter { it.invoiceNumber !in localInvoiceSet }.forEach { remoteSale ->
+            val localProductId = productIdByImei[remoteSale.imei] ?: remoteSale.productId
+            saleDao.insertSale(remoteSale.copy(id = 0L, productId = localProductId))
         }
 
-        // Smart Merge Expenses
+        // Smart Merge Expenses without replacing existing local rows.
         if (expenses.isNotEmpty()) {
             val localExpenses = expenseDao.getAllExpensesSync()
-            val localNotes = localExpenses.map { "${it.dateMillis}_${it.amount}" }.toSet()
-            val expensesToInsert = expenses.filter { "${it.dateMillis}_${it.amount}" !in localNotes }
+            val localKeys = localExpenses.map { "${it.dateMillis}_${it.amount}_${it.category}_${it.note}" }.toSet()
+            val expensesToInsert = expenses.filter {
+                "${it.dateMillis}_${it.amount}_${it.category}_${it.note}" !in localKeys
+            }
             if (expensesToInsert.isNotEmpty()) {
                 expenseDao.insertAll(expensesToInsert.map { it.copy(id = 0L) })
             }
         }
 
-        // Smart Merge Employees
-        if (employees.isNotEmpty()) {
-            val localEmps = employeeDao.getAllEmployeesSync()
-            val localNames = localEmps.map { it.name.trim().lowercase() }.toSet()
-            val empsToInsert = employees.filter { it.name.trim().lowercase() !in localNames }
-            if (empsToInsert.isNotEmpty()) {
-                employeeDao.insertEmployees(empsToInsert.map { it.copy(id = 0L) })
+        // Merge employees and retain a mapping from remote IDs to this device's Room IDs.
+        val localEmps = employeeDao.getAllEmployeesSync()
+        val employeeIdMap = mutableMapOf<Long, Long>()
+        for (remoteEmployee in employees) {
+            val matched = localEmps.firstOrNull {
+                (remoteEmployee.phone.isNotBlank() && it.phone == remoteEmployee.phone) ||
+                    it.name.trim().equals(remoteEmployee.name.trim(), ignoreCase = true)
             }
+            val localId = matched?.id ?: employeeDao.insertEmployee(remoteEmployee.copy(id = 0L))
+            employeeIdMap[remoteEmployee.id] = localId
+        }
+
+        // Salary payments are merged by their business details, not device-local IDs.
+        val localSalaryPayments = employeeDao.getAllSalaryPaymentsSync()
+        val localSalaryKeys = localSalaryPayments.map {
+            "${it.employeeName}|${it.monthYear}|${it.paymentDateMillis}|${it.amountPaid}|${it.paymentType}"
+        }.toSet()
+        salaryPayments.filter {
+            "${it.employeeName}|${it.monthYear}|${it.paymentDateMillis}|${it.amountPaid}|${it.paymentType}" !in localSalaryKeys
+        }.forEach { remotePayment ->
+            val mappedEmployeeId = employeeIdMap[remotePayment.employeeId]
+                ?: localEmps.firstOrNull { it.name.equals(remotePayment.employeeName, ignoreCase = true) }?.id
+                ?: remotePayment.employeeId
+            employeeDao.insertSalaryPayment(remotePayment.copy(id = 0L, employeeId = mappedEmployeeId))
         }
 
         // Smart Merge Users by username
