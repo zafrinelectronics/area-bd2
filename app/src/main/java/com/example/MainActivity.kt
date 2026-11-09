@@ -135,6 +135,9 @@ class MainActivity : ComponentActivity() {
                             val lastGitHubSyncTime by viewModel.lastGitHubSyncTime.collectAsStateWithLifecycle()
                             val lastGitHubCommitSha by viewModel.lastGitHubCommitSha.collectAsStateWithLifecycle()
                             val lastGitHubSyncStatus by viewModel.lastGitHubSyncStatus.collectAsStateWithLifecycle()
+    val cloudAccountEmail by viewModel.cloudAccountEmail.collectAsStateWithLifecycle()
+    val isCloudAuthBusy by viewModel.isCloudAuthBusy.collectAsStateWithLifecycle()
+    val cloudAuthMessage by viewModel.cloudAuthMessage.collectAsStateWithLifecycle()
 
                             if (showLoginGitHubDialog) {
                                 GitHubSyncDialog(
@@ -612,7 +615,12 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                     )
                     AppTab.MORE -> MoreScreen(
                         onNavigate = { viewModel.setTab(it) },
-                        onLogout = { viewModel.logout() }
+                        onLogout = { viewModel.logout() },
+                        cloudAccountEmail = cloudAccountEmail,
+                        isCloudAuthBusy = isCloudAuthBusy,
+                        cloudAuthMessage = cloudAuthMessage,
+                        onCloudSignIn = { email, password -> viewModel.signInToFirebaseCloud(email, password) },
+                        onCloudSignOut = { viewModel.signOutFromFirebaseCloud() }
                     )
                     AppTab.SETTINGS -> SettingsScreen(
                         currentSettings = shopSettings,
