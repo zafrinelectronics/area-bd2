@@ -37,8 +37,13 @@ class SettingsManager(context: Context) {
         val customTabEmployees = prefs.getString("tab_employees", "") ?: ""
         val customTabSales = prefs.getString("tab_sales", "") ?: ""
         val customTabSettings = prefs.getString("tab_settings", "") ?: ""
+        val showDashboardTab = prefs.getBoolean("show_tab_dashboard", true)
+        val showStockTab = prefs.getBoolean("show_tab_stock", true)
+        val showSalesTab = prefs.getBoolean("show_tab_sales", true)
         val showExpensesTab = prefs.getBoolean("show_tab_expenses", true)
         val showEmployeesTab = prefs.getBoolean("show_tab_employees", true)
+        val showReportsTab = prefs.getBoolean("show_tab_reports", true)
+        val showSettingsTab = prefs.getBoolean("show_tab_settings", true)
 
         val companies = loadList("presets_companies", listOf("Apple", "Samsung", "Google", "Xiaomi", "OnePlus", "Vivo", "Oppo", "Realme"))
         val variants = loadList("presets_variants", listOf("64GB", "128GB", "256GB", "512GB", "1TB"))
@@ -66,8 +71,13 @@ class SettingsManager(context: Context) {
             customTabEmployees = customTabEmployees,
             customTabSales = customTabSales,
             customTabSettings = customTabSettings,
+            showDashboardTab = showDashboardTab,
+            showStockTab = showStockTab,
+            showSalesTab = showSalesTab,
             showExpensesTab = showExpensesTab,
             showEmployeesTab = showEmployeesTab,
+            showReportsTab = showReportsTab,
+            showSettingsTab = showSettingsTab,
             companyPresets = companies,
             variantPresets = variants,
             colorPresets = colors,
@@ -106,8 +116,13 @@ class SettingsManager(context: Context) {
             .putString("tab_employees", newSettings.customTabEmployees)
             .putString("tab_sales", newSettings.customTabSales)
             .putString("tab_settings", newSettings.customTabSettings)
+            .putBoolean("show_tab_dashboard", newSettings.showDashboardTab)
+            .putBoolean("show_tab_stock", newSettings.showStockTab)
+            .putBoolean("show_tab_sales", newSettings.showSalesTab)
             .putBoolean("show_tab_expenses", newSettings.showExpensesTab)
             .putBoolean("show_tab_employees", newSettings.showEmployeesTab)
+            .putBoolean("show_tab_reports", newSettings.showReportsTab)
+            .putBoolean("show_tab_settings", newSettings.showSettingsTab)
             .apply()
 
         saveList("presets_companies", newSettings.companyPresets)
