@@ -169,7 +169,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     // Firebase owner account is separate from the app's local staff login.
     private val firebaseCloudAuth = FirebaseCloudAuth()
     private val firebaseCloudSync = FirebaseCloudSync()
-    private val _cloudAccountEmail = MutableStateFlow(firebaseCloudAuth.currentEmail)
+    private val _cloudAccountEmail = MutableStateFlow(firebaseCloudAuth.currentEmail ?: if (firebaseCloudAuth.isSignedIn) "Automatic cloud sync" else null)
     val cloudAccountEmail: StateFlow<String?> = _cloudAccountEmail.asStateFlow()
     private val _isCloudAuthBusy = MutableStateFlow(false)
     val isCloudAuthBusy: StateFlow<Boolean> = _isCloudAuthBusy.asStateFlow()
@@ -271,9 +271,14 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                 }
             }
 
-            // Reconcile with Firebase automatically when an owner session already exists.
-            if (firebaseCloudAuth.isSignedIn) {
+            // Sign in anonymously in the background so Firebase saves data without asking for an account.
+            try {
+                firebaseCloudAuth.ensureAnonymousSignedIn()
+                _cloudAccountEmail.value = firebaseCloudAuth.currentEmail ?: "Automatic cloud sync"
                 triggerAutoCloudBackup()
+            } catch (cloudError: Exception) {
+                _cloudAuthMessage.value = cloudError.localizedMessage
+                    ?: "Enable Anonymous sign-in in Firebase Authentication to activate automatic cloud backup."
             }
         }
 
@@ -1025,6 +1030,19 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    private fun saveRestoredSettingsPreservingTabVisibility(restored: ShopSettings) {
+        val local = settingsManager.settings.value
+        settingsManager.saveSettings(restored.copy(
+            showDashboardTab = local.showDashboardTab,
+            showStockTab = local.showStockTab,
+            showSalesTab = local.showSalesTab,
+            showExpensesTab = local.showExpensesTab,
+            showEmployeesTab = local.showEmployeesTab,
+            showReportsTab = local.showReportsTab,
+            showSettingsTab = local.showSettingsTab
+        ))
+    }
+
     private var autoBackupJob: Job? = null
 
     /**
@@ -1042,7 +1060,15 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
 
                 // Firebase sync runs automatically after local data changes when
                 // the separate owner account is connected.
-                val ownerUid = firebaseCloudAuth.currentUid
+                val ownerUid = firebaseCloudAuth.currentUid ?: try {
+                    firebaseCloudAuth.ensureAnonymousSignedIn()
+                    _cloudAccountEmail.value = firebaseCloudAuth.currentEmail ?: "Automatic cloud sync"
+                    firebaseCloudAuth.currentUid
+                } catch (authError: Exception) {
+                    _cloudAuthMessage.value = authError.localizedMessage
+                        ?: "Enable Anonymous sign-in in Firebase Authentication."
+                    null
+                }
                 if (!ownerUid.isNullOrBlank()) {
                     try {
                         val mergedJson = firebaseCloudSync.sync(ownerUid, json)
@@ -1056,7 +1082,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                                 salaryPayments = cloudData.salaryPayments,
                                 users = emptyList()
                             )
-                            cloudData.shopSettings?.let { settingsManager.saveSettings(it) }
+                            cloudData.shopSettings?.let { saveRestoredSettingsPreservingTabVisibility(it) }
                             firebaseCloudSync.sync(ownerUid, getFullBackupJson())
                             _cloudAuthMessage.value = "Automatic Firebase cloud sync completed."
                         }
@@ -1128,7 +1154,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                     users = backupData.users
                 )
                 backupData.shopSettings?.let {
-                    settingsManager.saveSettings(it)
+                    saveRestoredSettingsPreservingTabVisibility(it)
                 }
                 _snackbarMessage.value = "GitHub থেকে ${backupData.products.size}টি প্রোডাক্ট ও সকল ডাটা সফলভাবে রিস্টোর হয়েছে!"
             }.onFailure { err ->
@@ -1173,7 +1199,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                             users = backupData.users
                         )
                         backupData.shopSettings?.let {
-                            settingsManager.saveSettings(it)
+                            saveRestoredSettingsPreservingTabVisibility(it)
                         }
                         _lastGitHubSyncTime.value = System.currentTimeMillis()
                         _lastGitHubCommitSha.value = backupData.sha.ifBlank { remoteSha }
@@ -1203,7 +1229,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                 users = backupData.users
             )
             backupData.shopSettings?.let {
-                settingsManager.saveSettings(it)
+                saveRestoredSettingsPreservingTabVisibility(it)
             }
             triggerAutoCloudBackup()
             _snackbarMessage.value = "ব্যাকআপ ডাটা সফলভাবে রিস্টোর হয়েছে!"
@@ -1278,7 +1304,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                                 salaryPayments = backupData.salaryPayments,
                                 users = backupData.users
                             )
-                            backupData.shopSettings?.let { settingsManager.saveSettings(it) }
+                            backupData.shopSettings?.let { saveRestoredSettingsPreservingTabVisibility(it) }
                             _lastGitHubCommitSha.value = backupData.sha
                             _lastGitHubSyncTime.value = System.currentTimeMillis()
                         }
@@ -1486,7 +1512,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
             _cloudAuthMessage.value = null
             try {
                 firebaseCloudAuth.signIn(email, password)
-                _cloudAccountEmail.value = firebaseCloudAuth.currentEmail
+                _cloudAccountEmail.value = firebaseCloudAuth.currentEmail ?: "Automatic cloud sync"
                 val ownerUid = firebaseCloudAuth.currentUid
                 if (!ownerUid.isNullOrBlank()) {
                     val localJson = getFullBackupJson()
