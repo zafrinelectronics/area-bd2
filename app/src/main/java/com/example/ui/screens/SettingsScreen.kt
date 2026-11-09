@@ -1280,8 +1280,10 @@ fun SettingsScreen(
                         Switch(
                             checked = showExpensesTab,
                             onCheckedChange = {
-                                showExpensesTab = it
-                                tabsSaved = false
+                                if (it || visibleTabCount > 1) {
+                                    showExpensesTab = it
+                                    tabsSaved = false
+                                }
                             },
                             modifier = Modifier.testTag("toggle_expenses_tab_switch"),
                             colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = MaterialTheme.colorScheme.primary)
@@ -1309,8 +1311,10 @@ fun SettingsScreen(
                         Switch(
                             checked = showEmployeesTab,
                             onCheckedChange = {
-                                showEmployeesTab = it
-                                tabsSaved = false
+                                if (it || visibleTabCount > 1) {
+                                    showEmployeesTab = it
+                                    tabsSaved = false
+                                }
                             },
                             modifier = Modifier.testTag("toggle_employees_tab_switch"),
                             colors = SwitchDefaults.colors(checkedThumbColor = Color.White, checkedTrackColor = MaterialTheme.colorScheme.primary)
