@@ -103,9 +103,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             val shopSettings by viewModel.shopSettings.collectAsStateWithLifecycle()
-            val cloudAccountEmail by viewModel.cloudAccountEmail.collectAsStateWithLifecycle()
-            val isCloudAuthBusy by viewModel.isCloudAuthBusy.collectAsStateWithLifecycle()
-            val cloudAuthMessage by viewModel.cloudAuthMessage.collectAsStateWithLifecycle()
             val currentStrings = EnglishStrings
             LaunchedEffect(shopSettings.appLanguage) {
                 if (!shopSettings.appLanguage.equals("EN", ignoreCase = true)) {
@@ -138,6 +135,9 @@ class MainActivity : ComponentActivity() {
                             val lastGitHubSyncTime by viewModel.lastGitHubSyncTime.collectAsStateWithLifecycle()
                             val lastGitHubCommitSha by viewModel.lastGitHubCommitSha.collectAsStateWithLifecycle()
                             val lastGitHubSyncStatus by viewModel.lastGitHubSyncStatus.collectAsStateWithLifecycle()
+    val cloudAccountEmail by viewModel.cloudAccountEmail.collectAsStateWithLifecycle()
+    val isCloudAuthBusy by viewModel.isCloudAuthBusy.collectAsStateWithLifecycle()
+    val cloudAuthMessage by viewModel.cloudAuthMessage.collectAsStateWithLifecycle()
 
                             if (showLoginGitHubDialog) {
                                 GitHubSyncDialog(
