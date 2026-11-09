@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1051557699331",
+    "project_id": "apple-area-shop",
+    "storage_bucket": "apple-area-shop.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1051557699331:android:283eb2fb3fa73939f89336",
+        "android_client_info": {
+          "package_name": "com.aistudio.appleareashop.kxmpzq"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDTkD7H_wQOkDilbdF6HmUX3TO2lVYdDzU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
