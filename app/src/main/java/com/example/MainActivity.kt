@@ -138,7 +138,6 @@ class MainActivity : ComponentActivity() {
     val cloudAccountEmail by viewModel.cloudAccountEmail.collectAsStateWithLifecycle()
     val isCloudAuthBusy by viewModel.isCloudAuthBusy.collectAsStateWithLifecycle()
     val cloudAuthMessage by viewModel.cloudAuthMessage.collectAsStateWithLifecycle()
-    val shopPairingCode by viewModel.shopPairingCode.collectAsStateWithLifecycle()
 
                             if (showLoginGitHubDialog) {
                                 GitHubSyncDialog(
@@ -242,6 +241,7 @@ fun MainAppContent(viewModel: InventoryViewModel) {
     val cloudAccountEmail by viewModel.cloudAccountEmail.collectAsStateWithLifecycle()
     val isCloudAuthBusy by viewModel.isCloudAuthBusy.collectAsStateWithLifecycle()
     val cloudAuthMessage by viewModel.cloudAuthMessage.collectAsStateWithLifecycle()
+    val shopPairingCode by viewModel.shopPairingCode.collectAsStateWithLifecycle()
 
     val isBatchMode by viewModel.isBatchMode.collectAsStateWithLifecycle()
     val githubConfig by viewModel.githubConfig.collectAsStateWithLifecycle()
