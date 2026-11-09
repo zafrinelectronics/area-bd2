@@ -43,9 +43,10 @@ fun CloudConnectionCard(
             modifier = Modifier.padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text("Firebase Cloud Account", style = MaterialTheme.typography.titleMedium)
+            Text("Firebase Cloud Sync", style = MaterialTheme.typography.titleMedium)
             Text(
-                if (accountEmail.isNullOrBlank()) "Connect the shop owner's Firebase account. This is separate from staff login."
+                if (accountEmail.isNullOrBlank()) "Automatic cloud connection is starting. No Firebase account is required."
+                else if (accountEmail == "Automatic cloud sync") "Connected automatically. No email or password required."
                 else "Connected account: $accountEmail",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -73,7 +74,7 @@ fun CloudConnectionCard(
                 ) {
                     Text(if (isBusy) "Connecting..." else "Connect Firebase Account")
                 }
-            } else {
+            } else if (accountEmail != "Automatic cloud sync") {
                 OutlinedButton(onClick = onSignOut, modifier = Modifier.fillMaxWidth()) {
                     Text("Disconnect Firebase Account")
                 }
@@ -82,7 +83,7 @@ fun CloudConnectionCard(
                 Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
             }
             Text(
-                "When connected, products, sales, expenses, employees, salary payments and shop settings sync automatically. Staff login accounts and passwords stay on this device.",
+                "Products, sales, expenses, employees, salary payments and shop settings are saved to Firebase automatically. Staff login accounts and passwords stay on this device.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
