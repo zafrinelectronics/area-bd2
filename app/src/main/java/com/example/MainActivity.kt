@@ -199,6 +199,22 @@ fun MainAppContent(viewModel: InventoryViewModel) {
     val isScannerOpen by viewModel.isScannerOpen.collectAsStateWithLifecycle()
     val saleForDuePayment by viewModel.saleForDuePayment.collectAsStateWithLifecycle()
     val shopSettings by viewModel.shopSettings.collectAsStateWithLifecycle()
+    val visibleBottomTabs = buildList {
+        if (shopSettings.showDashboardTab) add(Triple(AppTab.DASHBOARD, shopSettings.customTabDashboard.ifBlank { "Dashboard" }, Icons.Default.Dashboard))
+        if (shopSettings.showStockTab) add(Triple(AppTab.STOCK, shopSettings.customTabStock.ifBlank { "Stock" }, Icons.Default.Inventory2))
+        if (shopSettings.showSalesTab) add(Triple(AppTab.SALES, shopSettings.customTabSales.ifBlank { "Sell" }, Icons.Default.PointOfSale))
+        if (shopSettings.showExpensesTab) add(Triple(AppTab.EXPENSES, shopSettings.customTabExpenses.ifBlank { "Expenses" }, Icons.Default.Payments))
+        if (shopSettings.showEmployeesTab) add(Triple(AppTab.EMPLOYEES, shopSettings.customTabEmployees.ifBlank { "Staff" }, Icons.Default.Badge))
+        if (shopSettings.showReportsTab) add(Triple(AppTab.REPORTS, "Reports", Icons.Default.Assessment))
+        if (shopSettings.showSettingsTab) add(Triple(AppTab.SETTINGS, shopSettings.customTabSettings.ifBlank { "Settings" }, Icons.Default.Settings))
+    }
+
+    LaunchedEffect(currentTab, visibleBottomTabs) {
+        if (visibleBottomTabs.none { it.first == currentTab }) {
+            viewModel.setTab(visibleBottomTabs.firstOrNull()?.first ?: AppTab.SETTINGS)
+        }
+    }
+
 
     val filteredProducts by viewModel.filteredProducts.collectAsStateWithLifecycle()
     val allProducts by viewModel.allProducts.collectAsStateWithLifecycle()
@@ -478,16 +494,7 @@ fun MainAppContent(viewModel: InventoryViewModel) {
             snackbarHost = { SnackbarHost(snackbarHostState) },
             bottomBar = {
                 NavigationBar {
-                    val bottomTabs = listOf(
-                        Triple(AppTab.DASHBOARD, "Dashboard", Icons.Default.Dashboard),
-                        Triple(AppTab.STOCK, "Stock", Icons.Default.Inventory2),
-                        Triple(AppTab.SALES, "Sell", Icons.Default.PointOfSale),
-                        Triple(AppTab.EXPENSES, "Expenses", Icons.Default.Payments),
-                        Triple(AppTab.EMPLOYEES, "Staff", Icons.Default.Badge),
-                        Triple(AppTab.REPORTS, "Reports", Icons.Default.Assessment),
-                        Triple(AppTab.SETTINGS, "Settings", Icons.Default.Settings)
-                    )
-                    bottomTabs.forEach { (tab, label, icon) ->
+                    visibleBottomTabs.forEach { (tab, label, icon) ->
                         NavigationBarItem(
                             selected = currentTab == tab,
                             onClick = { viewModel.setTab(tab) },
