@@ -82,9 +82,9 @@ fun CloudConnectionCard(
                 Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
             }
             Text(
-                "Account connection only: automatic cloud upload and multi-device sync are not active yet.",
+                "When connected, products, sales, expenses, employees, salary payments and shop settings sync automatically. Staff login accounts and passwords stay on this device.",
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.error
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
     }
