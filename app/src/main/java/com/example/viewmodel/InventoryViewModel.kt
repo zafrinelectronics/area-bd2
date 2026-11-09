@@ -1527,7 +1527,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                             salaryPayments = cloudData.salaryPayments,
                             users = emptyList()
                         )
-                        cloudData.shopSettings?.let { settingsManager.saveSettings(it) }
+                        cloudData.shopSettings?.let { saveRestoredSettingsPreservingTabVisibility(it) }
                         firebaseCloudSync.sync(ownerUid, getFullBackupJson())
                     }
                 }
