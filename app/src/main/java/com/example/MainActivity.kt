@@ -615,12 +615,7 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                     )
                     AppTab.MORE -> MoreScreen(
                         onNavigate = { viewModel.setTab(it) },
-                        onLogout = { viewModel.logout() },
-                        cloudAccountEmail = cloudAccountEmail,
-                        isCloudAuthBusy = isCloudAuthBusy,
-                        cloudAuthMessage = cloudAuthMessage,
-                        onCloudSignIn = { email, password -> viewModel.signInToFirebaseCloud(email, password) },
-                        onCloudSignOut = { viewModel.signOutFromFirebaseCloud() }
+                        onLogout = { viewModel.logout() }
                     )
                     AppTab.SETTINGS -> SettingsScreen(
                         currentSettings = shopSettings,
@@ -632,7 +627,12 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                         lastSyncTime = lastGitHubSyncTime,
                         currentUser = currentUser,
                         onOpenUserManagement = { viewModel.openUserManagement() },
-                        onLogout = { viewModel.logout() }
+                        onLogout = { viewModel.logout() },
+                        cloudAccountEmail = cloudAccountEmail,
+                        isCloudAuthBusy = isCloudAuthBusy,
+                        cloudAuthMessage = cloudAuthMessage,
+                        onCloudSignIn = { email, password -> viewModel.signInToFirebaseCloud(email, password) },
+                        onCloudSignOut = { viewModel.signOutFromFirebaseCloud() }
                     )
                 }
             }
