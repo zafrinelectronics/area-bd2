@@ -11,6 +11,10 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+      STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -34,24 +38,21 @@ jobs:
       - name: Accept Android SDK licenses
         run: yes | sdkmanager --licenses || true
 
-      - name: Generate debug keystore
+      - name: Restore release keystore
         run: |
-         keytool -genkeypair -v \
-          -keystore debug.keystore \
-          -storepass android \
-          -alias androiddebugkey \
-          -keypass android \
-          -keyalg RSA \
-          -keysize 2048 \
-          -validity 10000 \
-          -dname "CN=Android Debug,O=Android,C=US"
+          echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/apple-area-shop-release.jks"
+          echo "KEYSTORE_PATH=$RUNNER_TEMP/apple-area-shop-release.jks" >> "$GITHUB_ENV"
 
-      - name: Build debug APK
-        run: gradle --no-daemon assembleDebug
+      - name: Build signed release APK
+        run: gradle --no-daemon assembleRelease
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
-          path: app/build/outputs/apk/debug/*.apk
+          name: apple-area-shop-release
+          path: app/build/outputs/apk/release/*.apk
           if-no-files-found: error
+
+      - name: Remove temporary keystore
+        if: always()
+        run: rm -f "$RUNNER_TEMP/apple-area-shop-release.jks"
