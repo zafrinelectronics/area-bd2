@@ -112,6 +112,9 @@ fun SettingsScreen(
     cloudAccountEmail: String? = null,
     isCloudAuthBusy: Boolean = false,
     cloudAuthMessage: String? = null,
+    shopPairingCode: String? = null,
+    onCreateShopPairingCode: () -> Unit = {},
+    onJoinShopWithPairingCode: (String) -> Unit = {},
     onCloudSignIn: (String, String) -> Unit = { _, _ -> },
     onCloudSignOut: () -> Unit = {}
 ) {
@@ -601,6 +604,9 @@ fun SettingsScreen(
                 accountEmail = cloudAccountEmail,
                 isBusy = isCloudAuthBusy,
                 message = cloudAuthMessage,
+                pairingCode = shopPairingCode,
+                onCreatePairingCode = onCreateShopPairingCode,
+                onJoinShop = onJoinShopWithPairingCode,
                 onSignIn = onCloudSignIn,
                 onSignOut = onCloudSignOut
             )
