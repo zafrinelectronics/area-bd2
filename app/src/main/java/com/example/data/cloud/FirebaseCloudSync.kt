@@ -218,6 +218,7 @@ class FirebaseCloudSync(
                 for (doc in remoteSnapshot.documents) {
                     if (doc.getBoolean("deleted") == true) continue
                     val key = doc.getString("syncKey") ?: doc.id
+                    if (key in deletedKeys) continue
                     val payload = doc.getString("payload") ?: continue
                     if (!merged.containsKey(key)) {
                         try { merged[key] = JSONObject(payload) } catch (_: Exception) {}
