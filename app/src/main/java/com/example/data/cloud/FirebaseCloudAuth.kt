@@ -19,6 +19,10 @@ class FirebaseCloudAuth(
     val isSignedIn: Boolean
         get() = auth.currentUser != null
 
+    suspend fun ensureAnonymousSignedIn() {
+        if (auth.currentUser == null) auth.signInAnonymously().await()
+    }
+
     suspend fun signIn(email: String, password: String) {
         require(email.isNotBlank()) { "Enter the Firebase account email." }
         require(password.isNotBlank()) { "Enter the Firebase account password." }
