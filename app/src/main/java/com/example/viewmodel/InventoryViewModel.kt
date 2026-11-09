@@ -23,6 +23,7 @@ import com.example.util.ParsedBackupData
 import com.example.data.model.AppUser
 import com.example.data.cloud.FirebaseCloudAuth
 import com.example.data.cloud.FirebaseCloudSync
+import com.google.firebase.firestore.ListenerRegistration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -38,6 +39,7 @@ import kotlinx.coroutines.launch
 import java.text.NumberFormat
 import java.util.Calendar
 import java.util.Locale
+import java.util.UUID
 
 enum class AppTab {
     DASHBOARD,
@@ -176,6 +178,18 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     private val _cloudAuthMessage = MutableStateFlow<String?>(null)
     val cloudAuthMessage: StateFlow<String?> = _cloudAuthMessage.asStateFlow()
 
+    private val cloudPrefs = application.getSharedPreferences("apple_area_bd_cloud_prefs", Context.MODE_PRIVATE)
+    private val cloudDeviceId: String = cloudPrefs.getString("device_id", null)
+        ?: UUID.randomUUID().toString().also {
+            cloudPrefs.edit().putString("device_id", it).apply()
+        }
+    private val _activeShopUid = MutableStateFlow(cloudPrefs.getString("active_shop_uid", null))
+    val activeShopUid: StateFlow<String?> = _activeShopUid.asStateFlow()
+    private val _shopPairingCode = MutableStateFlow<String?>(null)
+    val shopPairingCode: StateFlow<String?> = _shopPairingCode.asStateFlow()
+    private var cloudListener: ListenerRegistration? = null
+    private var cloudPullJob: Job? = null
+
     // Sale Checkout Dialog State
     private val _productToSell = MutableStateFlow<Product?>(null)
     val productToSell: StateFlow<Product?> = _productToSell.asStateFlow()
@@ -271,14 +285,28 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                 }
             }
 
-            // Sign in anonymously in the background so Firebase saves data without asking for an account.
+            // Connect this installation to its saved shop, or create its own shop on first use.
             try {
                 firebaseCloudAuth.ensureAnonymousSignedIn()
                 _cloudAccountEmail.value = firebaseCloudAuth.currentEmail ?: "Automatic cloud sync"
+                val firebaseUid = firebaseCloudAuth.currentUid
+                    ?: throw IllegalStateException("Firebase anonymous authentication is unavailable.")
+                val savedShopUid = cloudPrefs.getString("active_shop_uid", null)
+                val shopUid = if (!savedShopUid.isNullOrBlank() &&
+                    firebaseCloudSync.isMember(savedShopUid, firebaseUid)
+                ) {
+                    savedShopUid
+                } else {
+                    firebaseCloudSync.ensureOwnerShop(firebaseUid)
+                    firebaseUid
+                }
+                cloudPrefs.edit().putString("active_shop_uid", shopUid).apply()
+                _activeShopUid.value = shopUid
+                attachCloudListener(shopUid)
                 triggerAutoCloudBackup()
             } catch (cloudError: Exception) {
                 _cloudAuthMessage.value = cloudError.localizedMessage
-                    ?: "Enable Anonymous sign-in in Firebase Authentication to activate automatic cloud backup."
+                    ?: "Could not connect to Firebase. Publish the updated Firestore rules to enable secure shop pairing."
             }
         }
 
@@ -1060,7 +1088,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
 
                 // Firebase sync runs automatically after local data changes when
                 // the separate owner account is connected.
-                val ownerUid = firebaseCloudAuth.currentUid ?: try {
+                val firebaseUid = firebaseCloudAuth.currentUid ?: try {
                     firebaseCloudAuth.ensureAnonymousSignedIn()
                     _cloudAccountEmail.value = firebaseCloudAuth.currentEmail ?: "Automatic cloud sync"
                     firebaseCloudAuth.currentUid
@@ -1069,9 +1097,15 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                         ?: "Enable Anonymous sign-in in Firebase Authentication."
                     null
                 }
+                val ownerUid = _activeShopUid.value ?: firebaseUid?.also { uid ->
+                    firebaseCloudSync.ensureOwnerShop(uid)
+                    cloudPrefs.edit().putString("active_shop_uid", uid).apply()
+                    _activeShopUid.value = uid
+                    attachCloudListener(uid)
+                }
                 if (!ownerUid.isNullOrBlank()) {
                     try {
-                        val mergedJson = firebaseCloudSync.sync(ownerUid, json)
+                        val mergedJson = firebaseCloudSync.sync(ownerUid, json, deviceId = cloudDeviceId)
                         val cloudData = GitHubBackupManager.parseBackupJson(mergedJson)
                         if (cloudData != null) {
                             repository.restoreDatabase(
@@ -1083,7 +1117,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                                 users = emptyList()
                             )
                             cloudData.shopSettings?.let { saveRestoredSettingsPreservingTabVisibility(it) }
-                            firebaseCloudSync.sync(ownerUid, getFullBackupJson())
+                            firebaseCloudSync.sync(ownerUid, getFullBackupJson(), deviceId = cloudDeviceId)
                             _cloudAuthMessage.value = "Automatic Firebase cloud sync completed."
                         }
                     } catch (cloudError: Exception) {
@@ -1506,6 +1540,102 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     }
 
     
+    private fun attachCloudListener(shopUid: String) {
+        cloudListener?.remove()
+        val uid = firebaseCloudAuth.currentUid ?: return
+        cloudListener = firebaseCloudSync.listenForChanges(shopUid, cloudDeviceId) {
+            if (cloudPullJob?.isActive == true) return@listenForChanges
+            cloudPullJob = viewModelScope.launch(Dispatchers.IO) {
+                try {
+                    val mergedJson = firebaseCloudSync.sync(
+                        shopUid,
+                        getFullBackupJson(),
+                        preferRemote = true,
+                        deviceId = cloudDeviceId
+                    )
+                    val cloudData = GitHubBackupManager.parseBackupJson(mergedJson)
+                    if (cloudData != null) {
+                        repository.restoreDatabase(
+                            products = cloudData.products,
+                            sales = cloudData.sales,
+                            expenses = cloudData.expenses,
+                            employees = cloudData.employees,
+                            salaryPayments = cloudData.salaryPayments,
+                            users = emptyList()
+                        )
+                        cloudData.shopSettings?.let { saveRestoredSettingsPreservingTabVisibility(it) }
+                    }
+                } catch (error: Exception) {
+                    _cloudAuthMessage.value = error.localizedMessage ?: "Could not receive updates from the paired shop."
+                }
+            }
+        }
+    }
+
+    fun createShopPairingCode() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _isCloudAuthBusy.value = true
+            _cloudAuthMessage.value = null
+            try {
+                firebaseCloudAuth.ensureAnonymousSignedIn()
+                val uid = firebaseCloudAuth.currentUid
+                    ?: throw IllegalStateException("Firebase is not connected.")
+                val shopUid = _activeShopUid.value ?: uid.also {
+                    firebaseCloudSync.ensureOwnerShop(it)
+                    cloudPrefs.edit().putString("active_shop_uid", it).apply()
+                    _activeShopUid.value = it
+                }
+                _shopPairingCode.value = firebaseCloudSync.createPairingCode(shopUid, uid)
+                _cloudAuthMessage.value = "Pairing code created. It expires in 10 minutes and can be used once."
+            } catch (error: Exception) {
+                _cloudAuthMessage.value = error.localizedMessage ?: "Could not create a pairing code."
+            } finally {
+                _isCloudAuthBusy.value = false
+            }
+        }
+    }
+
+    fun joinShopWithPairingCode(code: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _isCloudAuthBusy.value = true
+            _cloudAuthMessage.value = null
+            try {
+                firebaseCloudAuth.ensureAnonymousSignedIn()
+                val uid = firebaseCloudAuth.currentUid
+                    ?: throw IllegalStateException("Firebase is not connected.")
+                val shopUid = firebaseCloudSync.joinShopWithCode(code, uid)
+                cloudPrefs.edit().putString("active_shop_uid", shopUid).apply()
+                _activeShopUid.value = shopUid
+                _shopPairingCode.value = null
+                attachCloudListener(shopUid)
+
+                val mergedJson = firebaseCloudSync.sync(
+                    shopUid,
+                    getFullBackupJson(),
+                    preferRemote = true,
+                    deviceId = cloudDeviceId
+                )
+                val cloudData = GitHubBackupManager.parseBackupJson(mergedJson)
+                if (cloudData != null) {
+                    repository.restoreDatabase(
+                        products = cloudData.products,
+                        sales = cloudData.sales,
+                        expenses = cloudData.expenses,
+                        employees = cloudData.employees,
+                        salaryPayments = cloudData.salaryPayments,
+                        users = emptyList()
+                    )
+                    cloudData.shopSettings?.let { saveRestoredSettingsPreservingTabVisibility(it) }
+                }
+                _cloudAuthMessage.value = "This device is now paired with the shop. Cloud updates are enabled."
+            } catch (error: Exception) {
+                _cloudAuthMessage.value = error.localizedMessage ?: "Could not join this shop."
+            } finally {
+                _isCloudAuthBusy.value = false
+            }
+        }
+    }
+
     fun signInToFirebaseCloud(email: String, password: String) {
         viewModelScope.launch {
             _isCloudAuthBusy.value = true
@@ -1516,7 +1646,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                 val ownerUid = firebaseCloudAuth.currentUid
                 if (!ownerUid.isNullOrBlank()) {
                     val localJson = getFullBackupJson()
-                    val mergedJson = firebaseCloudSync.sync(ownerUid, localJson)
+                    val mergedJson = firebaseCloudSync.sync(ownerUid, localJson, deviceId = cloudDeviceId)
                     val cloudData = GitHubBackupManager.parseBackupJson(mergedJson)
                     if (cloudData != null) {
                         repository.restoreDatabase(
