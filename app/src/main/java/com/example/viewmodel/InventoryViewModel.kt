@@ -270,6 +270,11 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                     _isLoggedIn.value = true
                 }
             }
+
+            // Reconcile with Firebase automatically when an owner session already exists.
+            if (firebaseCloudAuth.isSignedIn) {
+                triggerAutoCloudBackup()
+            }
         }
 
         // Real-time Cloud Synchronization Polling (syncs every 5s if GitHub configured)
