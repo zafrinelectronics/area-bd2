@@ -934,6 +934,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                 note = note.trim()
             )
             repository.recordSalaryPayment(payment, recordAsShopExpense)
+            triggerAutoCloudBackup()
             _snackbarMessage.value = "${employee.name} কে ৳ ${formatBdt(amountPaid)} বেতন পরিশোধ সফল হয়েছে!"
         }
     }
@@ -941,6 +942,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     fun deleteSalaryPayment(payment: SalaryPayment) {
         viewModelScope.launch {
             repository.deleteSalaryPayment(payment)
+            triggerAutoCloudBackup()
             _snackbarMessage.value = "বেতন পরিশোধের রেকর্ড মুছে ফেলা হয়েছে।"
         }
     }
@@ -948,11 +950,13 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     // Settings Customization
     fun updateShopSettings(settings: ShopSettings) {
         settingsManager.saveSettings(settings)
+        triggerAutoCloudBackup()
         _snackbarMessage.value = "দোকান ও মেমো সেটিংস সংরক্ষিত হয়েছে!"
     }
 
     fun resetShopSettings() {
         settingsManager.resetToDefaults()
+        triggerAutoCloudBackup()
         _snackbarMessage.value = "ডিফল্ট সেটিংস সফলভাবে রিস্টোর হয়েছে!"
     }
 
