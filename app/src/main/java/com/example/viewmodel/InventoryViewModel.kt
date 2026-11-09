@@ -21,6 +21,7 @@ import com.example.util.GitHubSyncResult
 import com.example.util.NotificationHelper
 import com.example.util.ParsedBackupData
 import com.example.data.model.AppUser
+import com.example.data.cloud.FirebaseCloudAuth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -162,6 +163,16 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
 
     private val _lastGitHubSyncStatus = MutableStateFlow(GitHubBackupManager.getLastSyncStatus(application))
     val lastGitHubSyncStatus: StateFlow<String> = _lastGitHubSyncStatus.asStateFlow()
+
+    
+    // Firebase owner account is separate from the app's local staff login.
+    private val firebaseCloudAuth = FirebaseCloudAuth()
+    private val _cloudAccountEmail = MutableStateFlow(firebaseCloudAuth.currentEmail)
+    val cloudAccountEmail: StateFlow<String?> = _cloudAccountEmail.asStateFlow()
+    private val _isCloudAuthBusy = MutableStateFlow(false)
+    val isCloudAuthBusy: StateFlow<Boolean> = _isCloudAuthBusy.asStateFlow()
+    private val _cloudAuthMessage = MutableStateFlow<String?>(null)
+    val cloudAuthMessage: StateFlow<String?> = _cloudAuthMessage.asStateFlow()
 
     // Sale Checkout Dialog State
     private val _productToSell = MutableStateFlow<Product?>(null)
@@ -1429,5 +1440,28 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
         fun formatBdt(amount: Double): String {
             return formatAmount(amount, "BN")
         }
+    }
+
+    
+    fun signInToFirebaseCloud(email: String, password: String) {
+        viewModelScope.launch {
+            _isCloudAuthBusy.value = true
+            _cloudAuthMessage.value = null
+            try {
+                firebaseCloudAuth.signIn(email, password)
+                _cloudAccountEmail.value = firebaseCloudAuth.currentEmail
+                _cloudAuthMessage.value = "Firebase account connected. Cloud data transfer is not enabled yet."
+            } catch (error: Exception) {
+                _cloudAuthMessage.value = error.localizedMessage ?: "Could not connect to Firebase."
+            } finally {
+                _isCloudAuthBusy.value = false
+            }
+        }
+    }
+
+    fun signOutFromFirebaseCloud() {
+        firebaseCloudAuth.signOut()
+        _cloudAccountEmail.value = null
+        _cloudAuthMessage.value = "Firebase account disconnected."
     }
 }
