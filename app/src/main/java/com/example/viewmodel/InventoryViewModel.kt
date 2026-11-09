@@ -22,6 +22,7 @@ import com.example.util.NotificationHelper
 import com.example.util.ParsedBackupData
 import com.example.data.model.AppUser
 import com.example.data.cloud.FirebaseCloudAuth
+import com.example.data.cloud.FirebaseCloudSync
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -167,6 +168,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     
     // Firebase owner account is separate from the app's local staff login.
     private val firebaseCloudAuth = FirebaseCloudAuth()
+    private val firebaseCloudSync = FirebaseCloudSync()
     private val _cloudAccountEmail = MutableStateFlow(firebaseCloudAuth.currentEmail)
     val cloudAccountEmail: StateFlow<String?> = _cloudAccountEmail.asStateFlow()
     private val _isCloudAuthBusy = MutableStateFlow(false)
@@ -1029,6 +1031,32 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                 val json = getFullBackupJson()
                 GitHubBackupManager.saveAutoBackupSnapshot(getApplication(), json)
 
+                // Firebase sync runs automatically after local data changes when
+                // the separate owner account is connected.
+                val ownerUid = firebaseCloudAuth.currentUid
+                if (!ownerUid.isNullOrBlank()) {
+                    try {
+                        val mergedJson = firebaseCloudSync.sync(ownerUid, json)
+                        val cloudData = GitHubBackupManager.parseBackupJson(mergedJson)
+                        if (cloudData != null) {
+                            repository.restoreDatabase(
+                                products = cloudData.products,
+                                sales = cloudData.sales,
+                                expenses = cloudData.expenses,
+                                employees = cloudData.employees,
+                                salaryPayments = cloudData.salaryPayments,
+                                users = emptyList()
+                            )
+                            cloudData.shopSettings?.let { settingsManager.saveSettings(it) }
+                            firebaseCloudSync.sync(ownerUid, getFullBackupJson())
+                            _cloudAuthMessage.value = "Automatic Firebase cloud sync completed."
+                        }
+                    } catch (cloudError: Exception) {
+                        _cloudAuthMessage.value = cloudError.localizedMessage
+                            ?: "Firebase cloud sync failed. Check Firestore rules and connection."
+                    }
+                }
+
                 val config = _githubConfig.value
                 if (config.autoSyncEnabled && config.token.isNotBlank() && config.owner.isNotBlank() && config.repo.isNotBlank()) {
                     val result = GitHubBackupManager.pushBackupToGitHub(getApplication(), config, json)
@@ -1450,7 +1478,25 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
             try {
                 firebaseCloudAuth.signIn(email, password)
                 _cloudAccountEmail.value = firebaseCloudAuth.currentEmail
-                _cloudAuthMessage.value = "Firebase account connected. Cloud data transfer is not enabled yet."
+                val ownerUid = firebaseCloudAuth.currentUid
+                if (!ownerUid.isNullOrBlank()) {
+                    val localJson = getFullBackupJson()
+                    val mergedJson = firebaseCloudSync.sync(ownerUid, localJson)
+                    val cloudData = GitHubBackupManager.parseBackupJson(mergedJson)
+                    if (cloudData != null) {
+                        repository.restoreDatabase(
+                            products = cloudData.products,
+                            sales = cloudData.sales,
+                            expenses = cloudData.expenses,
+                            employees = cloudData.employees,
+                            salaryPayments = cloudData.salaryPayments,
+                            users = emptyList()
+                        )
+                        cloudData.shopSettings?.let { settingsManager.saveSettings(it) }
+                        firebaseCloudSync.sync(ownerUid, getFullBackupJson())
+                    }
+                }
+                _cloudAuthMessage.value = "Firebase account connected. Automatic cloud sync is active."
             } catch (error: Exception) {
                 _cloudAuthMessage.value = error.localizedMessage ?: "Could not connect to Firebase."
             } finally {
