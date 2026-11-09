@@ -108,7 +108,12 @@ fun SettingsScreen(
     lastSyncTime: Long = 0L,
     currentUser: AppUser? = null,
     onOpenUserManagement: () -> Unit = {},
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
+    cloudAccountEmail: String? = null,
+    isCloudAuthBusy: Boolean = false,
+    cloudAuthMessage: String? = null,
+    onCloudSignIn: (String, String) -> Unit = { _, _ -> },
+    onCloudSignOut: () -> Unit = {}
 ) {
     val strings = LocalAppStrings.current
     val isEnglish = strings.tabDashboard == "Dashboard"
@@ -584,6 +589,16 @@ fun SettingsScreen(
                     }
                 }
             }
+        }
+
+        item {
+            CloudConnectionCard(
+                accountEmail = cloudAccountEmail,
+                isBusy = isCloudAuthBusy,
+                message = cloudAuthMessage,
+                onSignIn = onCloudSignIn,
+                onSignOut = onCloudSignOut
+            )
         }
 
         // SHOP DETAILS SECTION:
