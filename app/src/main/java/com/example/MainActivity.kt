@@ -222,6 +222,10 @@ fun MainAppContent(viewModel: InventoryViewModel) {
     val isUserManagementOpen by viewModel.isUserManagementOpen.collectAsStateWithLifecycle()
     val allUsers by viewModel.allUsers.collectAsStateWithLifecycle()
 
+    val cloudAccountEmail by viewModel.cloudAccountEmail.collectAsStateWithLifecycle()
+    val isCloudAuthBusy by viewModel.isCloudAuthBusy.collectAsStateWithLifecycle()
+    val cloudAuthMessage by viewModel.cloudAuthMessage.collectAsStateWithLifecycle()
+
     val isBatchMode by viewModel.isBatchMode.collectAsStateWithLifecycle()
     val githubConfig by viewModel.githubConfig.collectAsStateWithLifecycle()
     val isGitHubSyncing by viewModel.isGitHubSyncing.collectAsStateWithLifecycle()
