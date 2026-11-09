@@ -150,8 +150,13 @@ fun SettingsScreen(
     var tabEmployees by remember(currentSettings.customTabEmployees) { mutableStateOf(currentSettings.customTabEmployees) }
     var tabSales by remember(currentSettings.customTabSales) { mutableStateOf(currentSettings.customTabSales) }
     var tabSettings by remember(currentSettings.customTabSettings) { mutableStateOf(currentSettings.customTabSettings) }
+    var showDashboardTab by remember(currentSettings.showDashboardTab) { mutableStateOf(currentSettings.showDashboardTab) }
+    var showStockTab by remember(currentSettings.showStockTab) { mutableStateOf(currentSettings.showStockTab) }
+    var showSalesTab by remember(currentSettings.showSalesTab) { mutableStateOf(currentSettings.showSalesTab) }
     var showExpensesTab by remember(currentSettings.showExpensesTab) { mutableStateOf(currentSettings.showExpensesTab) }
     var showEmployeesTab by remember(currentSettings.showEmployeesTab) { mutableStateOf(currentSettings.showEmployeesTab) }
+    var showReportsTab by remember(currentSettings.showReportsTab) { mutableStateOf(currentSettings.showReportsTab) }
+    var showSettingsTab by remember(currentSettings.showSettingsTab) { mutableStateOf(currentSettings.showSettingsTab) }
     var tabsSaved by remember { mutableStateOf(false) }
 
     // 1. Add Preset Dialog
@@ -1226,6 +1231,34 @@ fun SettingsScreen(
                         color = MaterialTheme.colorScheme.onSurface
                     )
 
+                    // All bottom navigation tabs can be hidden individually.
+                    val visibleTabCount = listOf(showDashboardTab, showStockTab, showSalesTab, showExpensesTab, showEmployeesTab, showReportsTab, showSettingsTab).count { it }
+                    if (visibleTabCount == 0) {
+                        Text(
+                            text = if (isEnglish) "Keep at least one tab enabled." else "অন্তত একটি ট্যাব চালু রাখতে হবে।",
+                            color = MaterialTheme.colorScheme.error,
+                            fontSize = 11.sp
+                        )
+                    }
+
+                    // Toggle Dashboard Tab
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text(if (isEnglish) "Show Dashboard Tab" else "Dashboard ট্যাব চালু রাখুন", fontSize = 13.sp, modifier = Modifier.weight(1f))
+                        Switch(checked = showDashboardTab, onCheckedChange = { if (it || visibleTabCount > 1) { showDashboardTab = it; tabsSaved = false } }, modifier = Modifier.testTag("toggle_dashboard_tab_switch"))
+                    }
+
+                    // Toggle Stock Tab
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text(if (isEnglish) "Show Stock Tab" else "Stock ট্যাব চালু রাখুন", fontSize = 13.sp, modifier = Modifier.weight(1f))
+                        Switch(checked = showStockTab, onCheckedChange = { if (it || visibleTabCount > 1) { showStockTab = it; tabsSaved = false } }, modifier = Modifier.testTag("toggle_stock_tab_switch"))
+                    }
+
+                    // Toggle Sales Tab
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text(if (isEnglish) "Show Sell Tab" else "Sell ট্যাব চালু রাখুন", fontSize = 13.sp, modifier = Modifier.weight(1f))
+                        Switch(checked = showSalesTab, onCheckedChange = { if (it || visibleTabCount > 1) { showSalesTab = it; tabsSaved = false } }, modifier = Modifier.testTag("toggle_sales_tab_switch"))
+                    }
+
                     // Toggle Expenses Tab
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -1284,6 +1317,18 @@ fun SettingsScreen(
                         )
                     }
 
+                    // Toggle Reports Tab
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text(if (isEnglish) "Show Reports Tab" else "Reports ট্যাব চালু রাখুন", fontSize = 13.sp, modifier = Modifier.weight(1f))
+                        Switch(checked = showReportsTab, onCheckedChange = { if (it || visibleTabCount > 1) { showReportsTab = it; tabsSaved = false } }, modifier = Modifier.testTag("toggle_reports_tab_switch"))
+                    }
+
+                    // Toggle Settings Tab (Settings remains available from the side menu)
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text(if (isEnglish) "Show Settings Tab" else "Settings ট্যাব চালু রাখুন", fontSize = 13.sp, modifier = Modifier.weight(1f))
+                        Switch(checked = showSettingsTab, onCheckedChange = { if (it || visibleTabCount > 1) { showSettingsTab = it; tabsSaved = false } }, modifier = Modifier.testTag("toggle_settings_tab_switch"))
+                    }
+
                     if (tabsSaved) {
                         Surface(
                             color = Color(0xFF10B981).copy(alpha = 0.12f),
@@ -1325,8 +1370,13 @@ fun SettingsScreen(
                                 tabExpenses = ""
                                 tabEmployees = ""
                                 tabSettings = ""
+                                showDashboardTab = true
+                                showStockTab = true
+                                showSalesTab = true
                                 showExpensesTab = true
                                 showEmployeesTab = true
+                                showReportsTab = true
+                                showSettingsTab = true
                                 onSaveSettings(
                                     currentSettings.copy(
                                         customTabDashboard = "",
@@ -1335,8 +1385,13 @@ fun SettingsScreen(
                                         customTabExpenses = "",
                                         customTabEmployees = "",
                                         customTabSettings = "",
+                                        showDashboardTab = true,
+                                        showStockTab = true,
+                                        showSalesTab = true,
                                         showExpensesTab = true,
-                                        showEmployeesTab = true
+                                        showEmployeesTab = true,
+                                        showReportsTab = true,
+                                        showSettingsTab = true
                                     )
                                 )
                                 tabsSaved = true
@@ -1362,8 +1417,13 @@ fun SettingsScreen(
                                         customTabExpenses = tabExpenses.trim(),
                                         customTabEmployees = tabEmployees.trim(),
                                         customTabSettings = tabSettings.trim(),
+                                        showDashboardTab = showDashboardTab,
+                                        showStockTab = showStockTab,
+                                        showSalesTab = showSalesTab,
                                         showExpensesTab = showExpensesTab,
-                                        showEmployeesTab = showEmployeesTab
+                                        showEmployeesTab = showEmployeesTab,
+                                        showReportsTab = showReportsTab,
+                                        showSettingsTab = showSettingsTab
                                     )
                                 )
                                 tabsSaved = true
