@@ -134,7 +134,7 @@ class FirebaseCloudSync(
         val syncRoot = firestore.collection("shops").document(ownerUid).collection("cloudSync")
         var changedRemote = false
 
-        val deviceStateRef = syncRoot.collection("deviceSnapshots").document(deviceId)
+        val deviceStateRef = syncRoot.document("deviceSnapshots").collection("devices").document(deviceId)
         val previousState = deviceStateRef.get().await()
         @Suppress("UNCHECKED_CAST")
         val previousKeys = (previousState.get("keys") as? Map<String, List<String>>) ?: emptyMap()
