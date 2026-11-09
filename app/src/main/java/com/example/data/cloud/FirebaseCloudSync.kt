@@ -138,7 +138,10 @@ class FirebaseCloudSync(
         val previousState = deviceStateRef.get().await()
         @Suppress("UNCHECKED_CAST")
         val previousKeys = (previousState.get("keys") as? Map<String, List<String>>) ?: emptyMap()
+        @Suppress("UNCHECKED_CAST")
+        val previousHashes = (previousState.get("hashes") as? Map<String, Map<String, String>>) ?: emptyMap()
         val currentKeysByCollection = linkedMapOf<String, List<String>>()
+        val currentHashesByCollection = linkedMapOf<String, Map<String, String>>()
 
         for (name in collections) {
             val localArray = root.optJSONArray(name) ?: JSONArray()
@@ -190,7 +193,24 @@ class FirebaseCloudSync(
                 if (preferRemote) {
                     if (!merged.containsKey(key)) merged[key] = item
                 } else {
-                    merged[key] = item
+                    val remotePayload = remoteDoc?.getString("payload")
+                    if (remotePayload == null) {
+                        merged[key] = item
+                    } else {
+                        val baselineHash = previousHashes[name]?.get(key)
+                        val localHash = sha256(item.toString())
+                        val remoteHash = sha256(remotePayload)
+                        when {
+                            baselineHash != null && localHash != baselineHash -> merged[key] = item
+                            baselineHash != null && remoteHash != baselineHash -> {
+                                try { merged[key] = JSONObject(remotePayload) } catch (_: Exception) { merged[key] = item }
+                            }
+                            baselineHash == null -> {
+                                try { merged[key] = JSONObject(remotePayload) } catch (_: Exception) { merged[key] = item }
+                            }
+                            else -> merged[key] = item
+                        }
+                    }
                 }
             }
 
@@ -209,6 +229,7 @@ class FirebaseCloudSync(
             merged.values.forEach { output.put(it) }
             root.put(name, output)
             currentKeysByCollection[name] = merged.keys.toList()
+            currentHashesByCollection[name] = merged.mapValues { sha256(it.value.toString()) }
 
             for ((key, item) in merged) {
                 val documentId = sha256(key)
@@ -224,25 +245,47 @@ class FirebaseCloudSync(
             }
         }
 
-        deviceStateRef.set(
-            mapOf(
-                "keys" to currentKeysByCollection,
-                "updatedAt" to FieldValue.serverTimestamp()
-            )
-        ).await()
-
         val settingsRef = syncRoot.document("settings")
         val remoteSettings = settingsRef.get().await()
         val localSettings = root.optJSONObject("settings")?.toString()
         val remoteSettingsPayload = remoteSettings.getString("payload")
-        if (preferRemote && remoteSettingsPayload != null) {
-            root.put("settings", JSONObject(remoteSettingsPayload))
-        } else if (localSettings != null && localSettings != remoteSettingsPayload) {
-            settingsRef.set(mapOf("payload" to localSettings)).await()
-            changedRemote = true
-        } else if (localSettings == null && remoteSettingsPayload != null) {
-            root.put("settings", JSONObject(remoteSettingsPayload))
+        val baselineSettingsHash = previousState.getString("settingsHash")
+        when {
+            preferRemote && remoteSettingsPayload != null ->
+                root.put("settings", JSONObject(remoteSettingsPayload))
+            localSettings == null && remoteSettingsPayload != null ->
+                root.put("settings", JSONObject(remoteSettingsPayload))
+            localSettings != null && remoteSettingsPayload == null -> {
+                settingsRef.set(mapOf("payload" to localSettings)).await()
+                changedRemote = true
+            }
+            localSettings != null && remoteSettingsPayload != null -> {
+                val localHash = sha256(localSettings)
+                val remoteHash = sha256(remoteSettingsPayload)
+                when {
+                    baselineSettingsHash != null && localHash != baselineSettingsHash -> {
+                        if (localSettings != remoteSettingsPayload) {
+                            settingsRef.set(mapOf("payload" to localSettings)).await()
+                            changedRemote = true
+                        }
+                    }
+                    baselineSettingsHash != null && remoteHash != baselineSettingsHash ->
+                        root.put("settings", JSONObject(remoteSettingsPayload))
+                    baselineSettingsHash == null ->
+                        root.put("settings", JSONObject(remoteSettingsPayload))
+                }
+            }
         }
+
+        val finalSettings = root.optJSONObject("settings")?.toString()
+        deviceStateRef.set(
+            mapOf(
+                "keys" to currentKeysByCollection,
+                "hashes" to currentHashesByCollection,
+                "settingsHash" to (finalSettings?.let { sha256(it) } ?: ""),
+                "updatedAt" to FieldValue.serverTimestamp()
+            )
+        ).await()
 
         if (changedRemote) {
             syncRoot.document("manifest").set(
