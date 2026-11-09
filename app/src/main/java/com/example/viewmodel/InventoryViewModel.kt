@@ -839,6 +839,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     fun saveEditedSale(sale: Sale) {
         viewModelScope.launch {
             repository.updateSale(sale)
+            triggerAutoCloudBackup()
             _editingSale.value = null
             if (_activeInvoiceSale.value?.id == sale.id) {
                 _activeInvoiceSale.value = sale
@@ -850,6 +851,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     fun deleteSale(sale: Sale, restoreStock: Boolean) {
         viewModelScope.launch {
             repository.deleteSale(sale, restoreStock)
+            triggerAutoCloudBackup()
             _editingSale.value = null
             _activeInvoiceSale.value = null
             _snackbarMessage.value = if (restoreStock) "মেমো মুছে ডিভাইসটি স্টকে ফেরত আনা হয়েছে।" else "মেমো মুছে ফেলা হয়েছে।"
@@ -870,6 +872,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
             val newPaid = sale.paidAmount + additionalPayment
             val newDue = (sale.dueAmount - additionalPayment).coerceAtLeast(0.0)
             repository.updateDuePayment(sale.id, newPaid, newDue)
+            triggerAutoCloudBackup()
             NotificationHelper.notifyDueCollected(getApplication(), sale.customerName, additionalPayment)
             _saleForDuePayment.value = null
             _snackbarMessage.value = "৳ ${formatBdt(additionalPayment)} বকেয়া জমা সফল হয়েছে!"
@@ -895,6 +898,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                 dateMillis = dateMillis
             )
             repository.addExpense(item)
+            triggerAutoCloudBackup()
             val label = if (type == TransactionType.EXPENSE.name) "খরচ" else "আয়"
             _snackbarMessage.value = "৳ ${formatBdt(amount)} $label সফলভাবে যুক্ত হয়েছে!"
         }
@@ -903,6 +907,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     fun deleteExpense(expense: Expense) {
         viewModelScope.launch {
             repository.deleteExpense(expense)
+            triggerAutoCloudBackup()
             _snackbarMessage.value = "হিসাব এন্ট্রি মুছে ফেলা হয়েছে।"
         }
     }
@@ -928,6 +933,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                 isActive = true
             )
             repository.addEmployee(emp)
+            triggerAutoCloudBackup()
             _snackbarMessage.value = "${emp.name} কে কর্মচারী হিসেবে যুক্ত করা হয়েছে!"
         }
     }
@@ -935,6 +941,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     fun updateEmployee(employee: Employee) {
         viewModelScope.launch {
             repository.updateEmployee(employee)
+            triggerAutoCloudBackup()
             _snackbarMessage.value = "${employee.name} এর তথ্য আপডেট করা হয়েছে!"
         }
     }
@@ -942,6 +949,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     fun deleteEmployee(employee: Employee) {
         viewModelScope.launch {
             repository.deleteEmployee(employee)
+            triggerAutoCloudBackup()
             _snackbarMessage.value = "${employee.name} কে মুছে ফেলা হয়েছে।"
         }
     }
@@ -996,6 +1004,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     fun clearAllDatabaseData() {
         viewModelScope.launch {
             repository.clearAllData()
+            triggerAutoCloudBackup()
             _snackbarMessage.value = "সকল স্টক, বিক্রি, খরচ এবং কর্মচারীর তথ্য মুছে ফেলা হয়েছে।"
         }
     }
@@ -1011,6 +1020,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                 shopAddress = "Shop No # 100, Basement - 1, Bashundhara City Shopping Mall, Panthapath, Dhaka- 1205"
             )
             settingsManager.saveSettings(demoSettings)
+            triggerAutoCloudBackup()
             _snackbarMessage.value = "APPLE AREA BD এর ডেমো ডাটা এবং শপ ইনফো সফলভাবে লোড হয়েছে।"
         }
     }
