@@ -1607,7 +1607,6 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                 cloudPrefs.edit().putString("active_shop_uid", shopUid).apply()
                 _activeShopUid.value = shopUid
                 _shopPairingCode.value = null
-                attachCloudListener(shopUid)
 
                 val mergedJson = firebaseCloudSync.sync(
                     shopUid,
@@ -1627,6 +1626,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                     )
                     cloudData.shopSettings?.let { saveRestoredSettingsPreservingTabVisibility(it) }
                 }
+                attachCloudListener(shopUid)
                 _cloudAuthMessage.value = "This device is now paired with the shop. Cloud updates are enabled."
             } catch (error: Exception) {
                 _cloudAuthMessage.value = error.localizedMessage ?: "Could not join this shop."
@@ -1658,7 +1658,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                             users = emptyList()
                         )
                         cloudData.shopSettings?.let { saveRestoredSettingsPreservingTabVisibility(it) }
-                        firebaseCloudSync.sync(ownerUid, getFullBackupJson())
+                        firebaseCloudSync.sync(ownerUid, getFullBackupJson(), deviceId = cloudDeviceId)
                     }
                 }
                 _cloudAuthMessage.value = "Firebase account connected. Automatic cloud sync is active."
