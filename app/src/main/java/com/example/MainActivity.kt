@@ -138,6 +138,7 @@ class MainActivity : ComponentActivity() {
     val cloudAccountEmail by viewModel.cloudAccountEmail.collectAsStateWithLifecycle()
     val isCloudAuthBusy by viewModel.isCloudAuthBusy.collectAsStateWithLifecycle()
     val cloudAuthMessage by viewModel.cloudAuthMessage.collectAsStateWithLifecycle()
+    val shopPairingCode by viewModel.shopPairingCode.collectAsStateWithLifecycle()
 
                             if (showLoginGitHubDialog) {
                                 GitHubSyncDialog(
@@ -642,6 +643,9 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                         cloudAccountEmail = cloudAccountEmail,
                         isCloudAuthBusy = isCloudAuthBusy,
                         cloudAuthMessage = cloudAuthMessage,
+                        shopPairingCode = shopPairingCode,
+                        onCreateShopPairingCode = { viewModel.createShopPairingCode() },
+                        onJoinShopWithPairingCode = { code -> viewModel.joinShopWithPairingCode(code) },
                         onCloudSignIn = { email, password -> viewModel.signInToFirebaseCloud(email, password) },
                         onCloudSignOut = { viewModel.signOutFromFirebaseCloud() }
                     )
