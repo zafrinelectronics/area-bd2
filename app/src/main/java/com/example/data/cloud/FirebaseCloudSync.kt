@@ -134,24 +134,59 @@ class FirebaseCloudSync(
         val syncRoot = firestore.collection("shops").document(ownerUid).collection("cloudSync")
         var changedRemote = false
 
+        val deviceStateRef = syncRoot.collection("deviceSnapshots").document(deviceId)
+        val previousState = deviceStateRef.get().await()
+        @Suppress("UNCHECKED_CAST")
+        val previousKeys = (previousState.get("keys") as? Map<String, List<String>>) ?: emptyMap()
+        val currentKeysByCollection = linkedMapOf<String, List<String>>()
+
         for (name in collections) {
             val localArray = root.optJSONArray(name) ?: JSONArray()
             val records = syncRoot.document(name).collection("records")
             val remoteSnapshot = records.get().await()
             val remoteById = remoteSnapshot.documents.associateBy { it.id }
-            val merged = LinkedHashMap<String, JSONObject>()
+            val localItems = linkedMapOf<String, JSONObject>()
+            for (i in 0 until localArray.length()) {
+                val item = localArray.optJSONObject(i) ?: continue
+                localItems[stableKey(name, item)] = item
+            }
 
+            // A key present in the previous successful local sync but now absent locally
+            // is a deliberate local deletion. Record a tombstone so paired devices do not
+            // restore the deleted item from an older copy.
+            val deletedKeys = if (!preferRemote && previousState.exists()) {
+                previousKeys[name].orEmpty().toSet() - localItems.keys
+            } else {
+                emptySet()
+            }
+            for (key in deletedKeys) {
+                val documentId = sha256(key)
+                if (remoteById[documentId]?.getBoolean("deleted") != true) {
+                    records.document(documentId).set(
+                        mapOf(
+                            "syncKey" to key,
+                            "deleted" to true,
+                            "deletedByDeviceId" to deviceId,
+                            "deletedAt" to FieldValue.serverTimestamp()
+                        )
+                    ).await()
+                    changedRemote = true
+                }
+            }
+
+            val merged = LinkedHashMap<String, JSONObject>()
             if (preferRemote) {
                 for (doc in remoteSnapshot.documents) {
+                    if (doc.getBoolean("deleted") == true) continue
                     val key = doc.getString("syncKey") ?: doc.id
                     val payload = doc.getString("payload") ?: continue
                     try { merged[key] = JSONObject(payload) } catch (_: Exception) {}
                 }
             }
 
-            for (i in 0 until localArray.length()) {
-                val item = localArray.optJSONObject(i) ?: continue
-                val key = stableKey(name, item)
+            for ((key, item) in localItems) {
+                val remoteDoc = remoteById[sha256(key)]
+                if (key in deletedKeys || remoteDoc?.getBoolean("deleted") == true) continue
                 if (preferRemote) {
                     if (!merged.containsKey(key)) merged[key] = item
                 } else {
@@ -161,6 +196,7 @@ class FirebaseCloudSync(
 
             if (!preferRemote) {
                 for (doc in remoteSnapshot.documents) {
+                    if (doc.getBoolean("deleted") == true) continue
                     val key = doc.getString("syncKey") ?: doc.id
                     val payload = doc.getString("payload") ?: continue
                     if (!merged.containsKey(key)) {
@@ -172,18 +208,28 @@ class FirebaseCloudSync(
             val output = JSONArray()
             merged.values.forEach { output.put(it) }
             root.put(name, output)
+            currentKeysByCollection[name] = merged.keys.toList()
 
             for ((key, item) in merged) {
                 val documentId = sha256(key)
                 val payload = item.toString()
-                if (remoteById[documentId]?.getString("payload") != payload) {
+                if (remoteById[documentId]?.getString("payload") != payload ||
+                    remoteById[documentId]?.getBoolean("deleted") == true
+                ) {
                     records.document(documentId).set(
-                        mapOf("syncKey" to key, "payload" to payload)
+                        mapOf("syncKey" to key, "payload" to payload, "deleted" to false)
                     ).await()
                     changedRemote = true
                 }
             }
         }
+
+        deviceStateRef.set(
+            mapOf(
+                "keys" to currentKeysByCollection,
+                "updatedAt" to FieldValue.serverTimestamp()
+            )
+        ).await()
 
         val settingsRef = syncRoot.document("settings")
         val remoteSettings = settingsRef.get().await()
