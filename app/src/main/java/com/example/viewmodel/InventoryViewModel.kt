@@ -1590,10 +1590,15 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                 firebaseCloudAuth.ensureAnonymousSignedIn()
                 val uid = firebaseCloudAuth.currentUid
                     ?: throw IllegalStateException("Firebase is not connected.")
-                val shopUid = _activeShopUid.value ?: uid.also {
-                    firebaseCloudSync.ensureOwnerShop(it)
-                    cloudPrefs.edit().putString("active_shop_uid", it).apply()
-                    _activeShopUid.value = it
+                val shopUid = _activeShopUid.value ?: uid
+                // Recover the current installation as owner only for its own UID.
+                // Never grant owner rights on another shop's UID.
+                if (shopUid == uid) {
+                    firebaseCloudSync.ensureOwnerShop(uid)
+                    cloudPrefs.edit().putString("active_shop_uid", uid).apply()
+                    _activeShopUid.value = uid
+                } else if (!firebaseCloudSync.isMember(shopUid, uid)) {
+                    throw IllegalStateException("This device is not a member of the selected shop. Do not reset shop data; contact support to recover ownership.")
                 }
                 _shopPairingCode.value = firebaseCloudSync.createPairingCode(shopUid, uid)
                 _cloudAuthMessage.value = "Pairing code created. It expires in 10 minutes and can be used once."
