@@ -608,7 +608,8 @@ fun SettingsScreen(
                 onCreatePairingCode = onCreateShopPairingCode,
                 onJoinShop = onJoinShopWithPairingCode,
                 onSignIn = onCloudSignIn,
-                onSignOut = onCloudSignOut
+                onSignOut = onCloudSignOut,
+                isAdmin = currentUser?.isAdmin == true
             )
         }
 
