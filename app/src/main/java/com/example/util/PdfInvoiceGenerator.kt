@@ -130,51 +130,51 @@ object PdfInvoiceGenerator {
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.color = Color.parseColor("#0284C7")
         paint.textSize = 10.5f
-        canvas.drawText("ক্রেতার তথ্য / Customer Info", 40f, 168f, paint)
+        canvas.drawText("ক্রেতার তথ্য / Customer Info", 56f, 168f, paint)
 
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.color = Color.parseColor("#1E293B")
         paint.textSize = 10.5f
-        canvas.drawText("নাম: ${sale.customerName}", 40f, 186f, paint)
-        canvas.drawText("মোবাইল: ${sale.customerPhone}", 40f, 202f, paint)
+        canvas.drawText("নাম: ${sale.customerName}", 56f, 186f, paint)
+        canvas.drawText("মোবাইল: ${sale.customerPhone}", 56f, 202f, paint)
         if (sale.customerAddress.isNotBlank()) {
             paint.textAlign = Paint.Align.RIGHT
             val addressText = "ঠিকানা: ${sale.customerAddress}"
             val truncatedAddress = if (addressText.length > 40) addressText.take(37) + "..." else addressText
-            canvas.drawText(truncatedAddress, (PAGE_WIDTH - 40).toFloat(), 202f, paint)
+            canvas.drawText(truncatedAddress, (PAGE_WIDTH - 56).toFloat(), 202f, paint)
             paint.textAlign = Paint.Align.LEFT
         }
 
         // Section Divider
         paint.color = Color.parseColor("#E2E8F0")
-        canvas.drawLine(40f, 214f, (PAGE_WIDTH - 40).toFloat(), 214f, paint)
+        canvas.drawLine(56f, 214f, (PAGE_WIDTH - 56).toFloat(), 214f, paint)
 
         // Product Details Section (No tinted box behind - clean white background)
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.color = Color.parseColor("#0284C7")
         paint.textSize = 10.5f
-        canvas.drawText("পণ্যের বিবরণ / Device Details", 40f, 234f, paint)
+        canvas.drawText("পণ্যের বিবরণ / Device Details", 56f, 234f, paint)
 
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.color = Color.parseColor("#0F172A")
         paint.textSize = 12f
-        canvas.drawText(sale.productDetails, 40f, 254f, paint)
+        canvas.drawText(sale.productDetails, 56f, 254f, paint)
 
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.color = Color.parseColor("#334155")
         paint.textSize = 10.5f
-        canvas.drawText("ডিভাইস (IMEI): ${sale.imei}", 40f, 272f, paint)
+        canvas.drawText("ডিভাইস (IMEI): ${sale.imei}", 56f, 272f, paint)
 
         val extraSpecs = StringBuilder()
         if (sale.batteryHealth.isNotBlank()) extraSpecs.append("ব্যাটারি: ${sale.batteryHealth}   ")
         if (sale.boxCondition.isNotBlank()) extraSpecs.append("বক্স: ${sale.boxCondition}")
         if (extraSpecs.isNotEmpty()) {
-            canvas.drawText(extraSpecs.toString(), 40f, 290f, paint)
+            canvas.drawText(extraSpecs.toString(), 56f, 290f, paint)
         }
 
         // Section Divider
         paint.color = Color.parseColor("#E2E8F0")
-        canvas.drawLine(40f, 302f, (PAGE_WIDTH - 40).toFloat(), 302f, paint)
+        canvas.drawLine(56f, 302f, (PAGE_WIDTH - 56).toFloat(), 302f, paint)
 
         // Pricing & Payment Details (No tinted box behind - clean white background)
         paint.textSize = 11f
@@ -183,34 +183,34 @@ object PdfInvoiceGenerator {
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.color = Color.parseColor("#1E293B")
         paint.textAlign = Paint.Align.LEFT
-        canvas.drawText("মোট বিক্রয় মূল্য:", 40f, 324f, paint)
+        canvas.drawText("মোট বিক্রয় মূল্য:", 56f, 324f, paint)
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.textAlign = Paint.Align.RIGHT
-        canvas.drawText("৳  ${InventoryViewModel.formatBdt(sale.salePrice)}", (PAGE_WIDTH - 40).toFloat(), 324f, paint)
+        canvas.drawText("৳  ${InventoryViewModel.formatBdt(sale.salePrice)}", (PAGE_WIDTH - 56).toFloat(), 324f, paint)
 
         // Row 2: Paid Amount
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.textAlign = Paint.Align.LEFT
-        canvas.drawText("পরিশোধিত টাকা:", 40f, 344f, paint)
+        canvas.drawText("পরিশোধিত টাকা:", 56f, 344f, paint)
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.color = Color.parseColor("#16A34A")
         paint.textAlign = Paint.Align.RIGHT
-        canvas.drawText("৳  ${InventoryViewModel.formatBdt(sale.paidAmount)}", (PAGE_WIDTH - 40).toFloat(), 344f, paint)
+        canvas.drawText("৳  ${InventoryViewModel.formatBdt(sale.paidAmount)}", (PAGE_WIDTH - 56).toFloat(), 344f, paint)
 
         // Row 3: Due Amount
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.color = if (sale.dueAmount > 0) Color.parseColor("#DC2626") else Color.parseColor("#16A34A")
         paint.textAlign = Paint.Align.LEFT
-        canvas.drawText("বকেয়া / বাকি:", 40f, 364f, paint)
+        canvas.drawText("বকেয়া / বাকি:", 56f, 364f, paint)
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.textAlign = Paint.Align.RIGHT
-        canvas.drawText("৳  ${InventoryViewModel.formatBdt(sale.dueAmount)}", (PAGE_WIDTH - 40).toFloat(), 364f, paint)
+        canvas.drawText("৳  ${InventoryViewModel.formatBdt(sale.dueAmount)}", (PAGE_WIDTH - 56).toFloat(), 364f, paint)
 
         // Row 4: Payment Method
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.color = Color.parseColor("#64748B")
         paint.textAlign = Paint.Align.LEFT
-        canvas.drawText("পেমেন্ট মেথড: ${sale.paymentMethod}", 40f, 384f, paint)
+        canvas.drawText("পেমেন্ট মেথড: ${sale.paymentMethod}", 56f, 384f, paint)
 
         // Warranty Policy Box (ONLY box retained as requested - with yellow/amber background)
         paint.style = Paint.Style.FILL
