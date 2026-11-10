@@ -1580,6 +1580,9 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch {
             try {
                 if (user.isAdmin) throw IllegalStateException("Admin প্রোফাইল এখানে পরিবর্তন করা যাবে না।")
+                require(!user.role.equals("ADMIN", ignoreCase = true)) {
+                    "স্টাফ অ্যাকাউন্টকে Admin role দেওয়া যাবে না।"
+                }
                 val shopUid = requireShopOwnerAdmin()
                 val safeUser = user.copy(password = "")
                 firebaseStaffAuth.updateStaff(shopUid, safeUser)
