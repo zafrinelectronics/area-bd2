@@ -69,16 +69,13 @@ class FirebaseStaffAuth(
         val expectedUid = profile.getString("authUid")
             ?: throw IllegalStateException("স্টাফ অ্যাকাউন্টের তথ্য অসম্পূর্ণ।")
 
-        val currentUid = staffAuth.currentUser?.uid
-        if (currentUid != expectedUid) {
+        // Always verify the password on an explicit login attempt, even if a previous
+        // secondary-auth session is still present on this device.
+        staffAuth.signOut()
+        val result = staffAuth.signInWithEmailAndPassword(email, password).await()
+        if (result.user?.uid != expectedUid) {
             staffAuth.signOut()
-            val result = staffAuth.signInWithEmailAndPassword(email, password).await()
-            require(result.user?.uid == expectedUid) {
-                staffAuth.signOut()
-                "লগইন যাচাই করা যায়নি।"
-            }
-        } else {
-            // Firebase retains the secondary session securely; the password is not stored by the app.
+            throw IllegalStateException("লগইন যাচাই করা যায়নি।")
         }
         return profile.toAppUser()
     }
