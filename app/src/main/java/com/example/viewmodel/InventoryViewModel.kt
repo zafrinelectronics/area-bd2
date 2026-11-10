@@ -191,6 +191,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     val shopPairingCode: StateFlow<String?> = _shopPairingCode.asStateFlow()
     private var cloudListener: ListenerRegistration? = null
     private var cloudPullJob: Job? = null
+    private var staffProfileListener: ListenerRegistration? = null
 
     // Sale Checkout Dialog State
     private val _productToSell = MutableStateFlow<Product?>(null)
@@ -345,9 +346,31 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
         if (restoredUser != null) {
             _currentUser.value = restoredUser
             _isLoggedIn.value = true
+            if (!restoredUser.isAdmin) attachStaffProfileListener(shopUid, restoredUser.username)
+            else staffProfileListener?.remove()
         } else {
             loginPrefs.edit().remove("logged_in_username").apply()
             firebaseStaffAuth.signOut()
+        }
+    }
+
+    private fun attachStaffProfileListener(shopUid: String, username: String) {
+        staffProfileListener?.remove()
+        staffProfileListener = firebaseStaffAuth.listenForStaffProfile(shopUid, username) { updated ->
+            val active = _currentUser.value
+            if (active?.username.equals(username, ignoreCase = true)) {
+                if (updated == null) {
+                    staffProfileListener?.remove()
+                    staffProfileListener = null
+                    firebaseStaffAuth.signOut()
+                    loginPrefs.edit().remove("logged_in_username").apply()
+                    _currentUser.value = null
+                    _isLoggedIn.value = false
+                    _snackbarMessage.value = "Admin আপনার স্টাফ অ্যাকাউন্ট বন্ধ বা মুছে দিয়েছেন।"
+                } else {
+                    _currentUser.value = updated
+                }
+            }
         }
     }
 
@@ -1383,6 +1406,13 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
 
                 _currentUser.value = authenticatedUser
                 _isLoggedIn.value = true
+                if (authenticatedUser.isAdmin) {
+                    staffProfileListener?.remove()
+                    staffProfileListener = null
+                    firebaseStaffAuth.signOut()
+                } else {
+                    attachStaffProfileListener(shopUid, authenticatedUser.username)
+                }
                 loginPrefs.edit().putString("logged_in_username", authenticatedUser.username).apply()
                 _snackbarMessage.value = if (isEn) "Welcome, ${authenticatedUser.fullName}!" else "স্বাগতম, ${authenticatedUser.fullName}!"
                 onResult(true)
@@ -1396,6 +1426,8 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun logout() {
         loginPrefs.edit().remove("logged_in_username").apply()
+        staffProfileListener?.remove()
+        staffProfileListener = null
         firebaseStaffAuth.signOut()
         _currentUser.value = null
         _isLoggedIn.value = false
