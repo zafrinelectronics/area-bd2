@@ -30,7 +30,8 @@ fun CloudConnectionCard(
     onCreatePairingCode: () -> Unit,
     onJoinShop: (String) -> Unit,
     onSignIn: (String, String) -> Unit,
-    onSignOut: () -> Unit
+    onSignOut: () -> Unit,
+    isAdmin: Boolean = false
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -45,15 +46,17 @@ fun CloudConnectionCard(
             modifier = Modifier.padding(18.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Text("Firebase Cloud Sync", style = MaterialTheme.typography.titleMedium)
-            Text(
-                if (accountEmail.isNullOrBlank()) "Automatic cloud connection is starting. No Firebase account is required."
-                else if (accountEmail == "Automatic cloud sync") "Connected automatically. No email or password required."
-                else "Connected account: $accountEmail",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            if (accountEmail.isNullOrBlank()) {
+            if (isAdmin) {
+                Text("Firebase Cloud Sync", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    if (accountEmail.isNullOrBlank()) "Automatic cloud connection is starting. No Firebase account is required."
+                    else if (accountEmail == "Automatic cloud sync") "Connected automatically. No email or password required."
+                    else "Connected account: $accountEmail",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            if (isAdmin && accountEmail.isNullOrBlank()) {
                 OutlinedTextField(
                     value = email,
                     onValueChange = { email = it },
@@ -76,7 +79,7 @@ fun CloudConnectionCard(
                 ) {
                     Text(if (isBusy) "Connecting..." else "Connect Firebase Account")
                 }
-            } else if (accountEmail != "Automatic cloud sync") {
+            } else if (isAdmin && accountEmail != "Automatic cloud sync") {
                 OutlinedButton(onClick = onSignOut, modifier = Modifier.fillMaxWidth()) {
                     Text("Disconnect Firebase Account")
                 }
