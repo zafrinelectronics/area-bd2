@@ -87,9 +87,10 @@ service cloud.firestore {
     // to authenticate staff, but only the shop owner device may manage them.
     // Passwords are never stored in these documents.
     match /shopStaff/{shopUid}/accounts/{username} {
-      allow get, list: if isShopMember(shopUid);
-      allow create, update, delete: if isShopOwner(shopUid);
-    }
+  allow get: if isShopMember(shopUid);
+  allow list: if isShopOwner(shopUid);
+  allow create, update, delete: if isShopOwner(shopUid);
+   }
 
     // All inventory, sales, expenses, employee and settings documents are restricted
     // to devices that have an owner-created or successfully paired membership.
