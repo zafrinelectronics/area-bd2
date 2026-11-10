@@ -42,6 +42,11 @@ class FirebaseCloudSync(
         return membershipRef(shopUid, memberUid).get().await().exists()
     }
 
+    suspend fun getMemberRole(shopUid: String, memberUid: String): String? {
+        if (shopUid.isBlank() || memberUid.isBlank()) return null
+        return membershipRef(shopUid, memberUid).get().await().getString("role")
+    }
+
     suspend fun createPairingCode(shopUid: String, creatorUid: String): String {
         require(shopUid.isNotBlank() && creatorUid.isNotBlank()) { "Shop is not connected." }
         val member = membershipRef(shopUid, creatorUid).get().await()
