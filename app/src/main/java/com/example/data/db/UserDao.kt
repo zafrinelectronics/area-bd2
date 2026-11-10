@@ -47,6 +47,9 @@ interface UserDao {
     @Query("DELETE FROM app_users WHERE id = :id")
     suspend fun deleteUserById(id: Long)
 
+    @Query("DELETE FROM app_users WHERE UPPER(role) != 'ADMIN'")
+    suspend fun deleteNonAdminUsers()
+
     @Query("DELETE FROM app_users")
     suspend fun deleteAllUsers()
 }
