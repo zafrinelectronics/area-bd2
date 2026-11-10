@@ -100,6 +100,13 @@ class InventoryRepository(
         userDao.deleteUser(user)
     }
 
+    suspend fun replaceCloudStaffUsers(users: List<AppUser>) {
+        userDao.deleteNonAdminUsers()
+        if (users.isNotEmpty()) {
+            userDao.insertAll(users.map { it.copy(id = 0L, password = "") })
+        }
+    }
+
     suspend fun seedAdminUserIfEmpty() {
         val existingAdmin = userDao.getUserByUsername("CONOCK") ?: userDao.getUserByUsername("Conock")
         if (existingAdmin == null) {
@@ -603,15 +610,8 @@ class InventoryRepository(
             employeeDao.insertSalaryPayment(remotePayment.copy(id = 0L, employeeId = mappedEmployeeId))
         }
 
-        // Smart Merge Users by username
-        if (users.isNotEmpty()) {
-            val localUsers = userDao.getAllUsersSync()
-            val localUsernames = localUsers.map { it.username.trim().lowercase() }.toSet()
-            val usersToInsert = users.filter { it.username.trim().lowercase() !in localUsernames }
-            if (usersToInsert.isNotEmpty()) {
-                userDao.insertAll(usersToInsert.map { it.copy(id = 0L) })
-            }
-        }
+        // Staff accounts are now Firebase Authentication accounts. Never restore
+        // legacy local staff usernames or passwords from backup files.
 
         seedAdminUserIfEmpty()
         prefs.edit().putBoolean("has_seeded_initial_data_v2", true).apply()
