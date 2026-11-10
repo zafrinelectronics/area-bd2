@@ -347,7 +347,11 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
             _currentUser.value = restoredUser
             _isLoggedIn.value = true
             if (!restoredUser.isAdmin) attachStaffProfileListener(shopUid, restoredUser.username)
-            else staffProfileListener?.remove()
+            else {
+                staffProfileListener?.remove()
+                staffProfileListener = null
+                firebaseStaffAuth.signOut()
+            }
         } else {
             loginPrefs.edit().remove("logged_in_username").apply()
             firebaseStaffAuth.signOut()
