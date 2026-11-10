@@ -2,6 +2,7 @@ package com.example.util
 
 import android.content.ContentValues
 import android.content.Context
+import android.content.Intent
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.graphics.RectF
@@ -9,6 +10,7 @@ import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import android.os.Build
 import android.os.Environment
+import android.net.Uri
 import android.provider.MediaStore
 import android.text.Layout
 import android.text.StaticLayout
@@ -216,6 +218,7 @@ object PdfReportGenerator {
             val stamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
             val safeName = title.replace(Regex("[^A-Za-z0-9_-]"), "_").take(35).ifBlank { "Report" }
             val fileName = "${safeName}_$stamp.pdf"
+            var savedUri: Uri? = null
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 val values = ContentValues().apply {
                     put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
@@ -230,12 +233,28 @@ object PdfReportGenerator {
                 values.clear()
                 values.put(MediaStore.MediaColumns.IS_PENDING, 0)
                 context.contentResolver.update(uri, values, null, null)
+                savedUri = uri
             } else {
                 val base = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS) ?: context.filesDir
                 val folder = File(base, "Apple Area Shop").apply { mkdirs() }
-                FileOutputStream(File(folder, fileName)).use { document.writeTo(it) }
+                val target = File(folder, fileName)
+                FileOutputStream(target).use { document.writeTo(it) }
+                savedUri = Uri.fromFile(target)
             }
             Toast.makeText(context, "PDF Downloads/Apple Area Shop ফোল্ডারে সেভ হয়েছে", Toast.LENGTH_LONG).show()
+
+            // Open the completed report with Android's app chooser, matching the sales memo flow.
+            savedUri?.let { uri ->
+                val viewIntent = Intent(Intent.ACTION_VIEW).apply {
+                    setDataAndType(uri, "application/pdf")
+                    flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK
+                }
+                try {
+                    context.startActivity(Intent.createChooser(viewIntent, "PDF ওপেন করুন"))
+                } catch (_: Exception) {
+                    Toast.makeText(context, "PDF খোলার অ্যাপ পাওয়া যায়নি। Downloads ফোল্ডার থেকে খুলুন।", Toast.LENGTH_LONG).show()
+                }
+            }
         } catch (error: Exception) {
             Toast.makeText(context, "PDF তৈরি করা যায়নি: ${error.localizedMessage ?: "Unknown error"}", Toast.LENGTH_LONG).show()
         } finally {
