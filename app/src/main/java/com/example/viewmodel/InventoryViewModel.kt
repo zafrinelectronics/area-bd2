@@ -276,6 +276,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
 
         viewModelScope.launch {
             repository.seedAdminUserIfEmpty()
+            repository.clearLegacyStaffUsers()
             repository.seedInitialDataIfEmpty()
 
             // Connect this installation to its saved shop before restoring any login.
