@@ -39,6 +39,7 @@ class FirebaseStaffAuth(
         }
 
         val syntheticEmail = "staff-${UUID.randomUUID()}@appleareashop.firebaseapp.com"
+        staffAuth.signOut()
         try {
             val result = staffAuth.createUserWithEmailAndPassword(syntheticEmail, password).await()
             val createdUid = result.user?.uid
