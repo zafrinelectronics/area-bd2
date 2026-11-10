@@ -108,8 +108,12 @@ class InventoryRepository(
     }
 
     suspend fun seedAdminUserIfEmpty() {
-        val existingAdmin = userDao.getUserByUsername("CONOCK") ?: userDao.getUserByUsername("Conock")
-        if (existingAdmin == null) {
+        val existingAdmin = userDao.getPrimaryAdmin()
+        if (existingAdmin != null) {
+            // Keep the oldest Admin record (the original owner account) and remove
+            // any duplicate default Admin that may have been seeded after a rename.
+            userDao.deleteOtherAdmins(existingAdmin.id)
+        } else {
             val adminUser = AppUser(
                 username = "CONOCK",
                 password = "1219",
