@@ -107,6 +107,10 @@ class InventoryRepository(
         }
     }
 
+    suspend fun clearLegacyStaffUsers() {
+        userDao.deleteNonAdminUsers()
+    }
+
     suspend fun seedAdminUserIfEmpty() {
         val existingAdmin = userDao.getPrimaryAdmin()
         if (existingAdmin != null) {
