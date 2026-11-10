@@ -171,6 +171,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     // Firebase owner account is separate from the app's local staff login.
     private val firebaseCloudAuth = FirebaseCloudAuth()
     private val firebaseCloudSync = FirebaseCloudSync()
+    private val firebaseStaffAuth = FirebaseStaffAuth(application)
     private val _cloudAccountEmail = MutableStateFlow(firebaseCloudAuth.currentEmail ?: if (firebaseCloudAuth.isSignedIn) "Automatic cloud sync" else null)
     val cloudAccountEmail: StateFlow<String?> = _cloudAccountEmail.asStateFlow()
     private val _isCloudAuthBusy = MutableStateFlow(false)
@@ -275,17 +276,8 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
             repository.seedAdminUserIfEmpty()
             repository.seedInitialDataIfEmpty()
 
-            // Restore login session if remembered
-            val savedUser = loginPrefs.getString("logged_in_username", null)
-            if (!savedUser.isNullOrBlank()) {
-                val user = repository.getUserByUsername(savedUser)
-                if (user != null && user.isActive) {
-                    _currentUser.value = user
-                    _isLoggedIn.value = true
-                }
-            }
-
-            // Connect this installation to its saved shop, or create its own shop on first use.
+            // Connect this installation to its saved shop before restoring any login.
+            // This prevents a paired member device from restoring its locally seeded Admin account.
             try {
                 firebaseCloudAuth.ensureAnonymousSignedIn()
                 _cloudAccountEmail.value = firebaseCloudAuth.currentEmail ?: "Automatic cloud sync"
@@ -303,6 +295,14 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                 cloudPrefs.edit().putString("active_shop_uid", shopUid).apply()
                 _activeShopUid.value = shopUid
                 attachCloudListener(shopUid)
+                try {
+                    refreshCloudStaffUsers(shopUid)
+                } catch (staffError: Exception) {
+                    _cloudAuthMessage.value = staffError.localizedMessage
+                        ?: "Could not load staff accounts. Check the published Firestore rules."
+                }
+                val memberRole = firebaseCloudSync.getMemberRole(shopUid, firebaseUid)
+                restoreSavedLogin(shopUid, memberRole)
                 triggerAutoCloudBackup()
             } catch (cloudError: Exception) {
                 _cloudAuthMessage.value = cloudError.localizedMessage
@@ -323,6 +323,30 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                     syncFromGitHubSilently()
                 }
             }
+        }
+    }
+
+    private suspend fun refreshCloudStaffUsers(shopUid: String) {
+        val staffUsers = firebaseStaffAuth.listStaff(shopUid)
+        repository.replaceCloudStaffUsers(staffUsers)
+    }
+
+    private suspend fun restoreSavedLogin(shopUid: String, memberRole: String?) {
+        val savedUsername = loginPrefs.getString("logged_in_username", null)
+        if (savedUsername.isNullOrBlank()) return
+        val localUser = repository.getUserByUsername(savedUsername)
+        val restoredUser = when {
+            memberRole == "owner" && localUser?.isAdmin == true && localUser.isActive -> localUser
+            memberRole in listOf("owner", "member") && localUser?.isAdmin != true ->
+                firebaseStaffAuth.restoreSession(shopUid, savedUsername)
+            else -> null
+        }
+        if (restoredUser != null) {
+            _currentUser.value = restoredUser
+            _isLoggedIn.value = true
+        } else {
+            loginPrefs.edit().remove("logged_in_username").apply()
+            firebaseStaffAuth.signOut()
         }
     }
 
@@ -1033,7 +1057,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
             expenses = allExpenses.value,
             employees = allEmployees.value,
             salaryPayments = allSalaryPayments.value,
-            users = allUsers.value,
+            users = emptyList(),
             settings = shopSettings.value
         )
     }
@@ -1044,14 +1068,13 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
         val expList = repository.getAllExpensesSync().ifEmpty { allExpenses.value }
         val empList = repository.getAllEmployeesSync().ifEmpty { allEmployees.value }
         val salaryList = repository.getAllSalaryPaymentsSync().ifEmpty { allSalaryPayments.value }
-        val usersList = repository.getAllUsersSync().ifEmpty { allUsers.value }
         GitHubBackupManager.createFullBackupJson(
             products = prods,
             sales = salesList,
             expenses = expList,
             employees = empList,
             salaryPayments = salaryList,
-            users = usersList,
+            users = emptyList(),
             settings = shopSettings.value
         )
     }
@@ -1318,7 +1341,8 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
-    // User Authentication & Management (CONOCK / 1219 default admin)
+    // Admin login remains local to the original shop-owner device.
+    // Staff accounts authenticate against Firebase and never use local legacy passwords.
     fun login(username: String, password: String, onResult: (Boolean) -> Unit = {}) {
         viewModelScope.launch {
             _loginError.value = null
@@ -1331,57 +1355,47 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                 return@launch
             }
 
-            var existingUser = repository.getUserByUsername(trimmedUser)
+            try {
+                firebaseCloudAuth.ensureAnonymousSignedIn()
+                val deviceUid = firebaseCloudAuth.currentUid
+                    ?: throw IllegalStateException("Firebase device authentication is unavailable.")
+                val shopUid = _activeShopUid.value
+                    ?: cloudPrefs.getString("active_shop_uid", null)
+                    ?: deviceUid
+                val memberRole = firebaseCloudSync.getMemberRole(shopUid, deviceUid)
+                val localUser = repository.getUserByUsername(trimmedUser)
 
-            // If user not found locally or GitHub is configured, attempt remote sync to fetch newly created users from other devices!
-            val config = _githubConfig.value
-            if (existingUser == null && config.token.isNotBlank() && config.owner.isNotBlank() && config.repo.isNotBlank()) {
-                try {
-                    val result = GitHubBackupManager.fetchBackupFromGitHub(config)
-                    result.getOrNull()?.let { backupData ->
-                        if (backupData.users.isNotEmpty()) {
-                            repository.restoreDatabase(
-                                products = backupData.products,
-                                sales = backupData.sales,
-                                expenses = backupData.expenses,
-                                employees = backupData.employees,
-                                salaryPayments = backupData.salaryPayments,
-                                users = backupData.users
-                            )
-                            backupData.shopSettings?.let { saveRestoredSettingsPreservingTabVisibility(it) }
-                            _lastGitHubCommitSha.value = backupData.sha
-                            _lastGitHubSyncTime.value = System.currentTimeMillis()
-                        }
+                val authenticatedUser = if (localUser?.isAdmin == true) {
+                    if (deviceUid != shopUid || memberRole != "owner") {
+                        throw IllegalStateException("Admin লগইন শুধুমাত্র মূল Shop Owner ডিভাইসে অনুমোদিত।")
                     }
-                    existingUser = repository.getUserByUsername(trimmedUser)
-                } catch (_: Exception) {}
-            }
+                    if (!localUser.isActive || localUser.password != trimmedPass) {
+                        throw IllegalStateException(if (isEn) "Incorrect username or password." else "ইউজারনেম অথবা পাসওয়ার্ড ভুল হয়েছে।")
+                    }
+                    localUser
+                } else {
+                    if (memberRole !in listOf("owner", "member")) {
+                        throw IllegalStateException("এই ডিভাইসটি দোকানের সঙ্গে যুক্ত নয়। আগে Pairing Code দিয়ে যুক্ত করুন।")
+                    }
+                    firebaseStaffAuth.signIn(shopUid, trimmedUser, trimmedPass)
+                }
 
-            if (existingUser == null) {
-                _loginError.value = if (isEn) "Username not found! Please check or sync with Cloud." else "ইউজারনেম পাওয়া যায়নি! সঠিক ইউজারনেম লিখুন।"
+                _currentUser.value = authenticatedUser
+                _isLoggedIn.value = true
+                loginPrefs.edit().putString("logged_in_username", authenticatedUser.username).apply()
+                _snackbarMessage.value = if (isEn) "Welcome, ${authenticatedUser.fullName}!" else "স্বাগতম, ${authenticatedUser.fullName}!"
+                onResult(true)
+            } catch (error: Exception) {
+                _loginError.value = error.localizedMessage
+                    ?: if (isEn) "Login failed. Check your connection and credentials." else "লগইন হয়নি। ইন্টারনেট ও তথ্য যাচাই করুন।"
                 onResult(false)
-                return@launch
             }
-            if (existingUser.password != trimmedPass) {
-                _loginError.value = if (isEn) "Incorrect password! Please try again." else "পাসওয়ার্ড ভুল হয়েছে! পুনরায় চেক করে লিখুন।"
-                onResult(false)
-                return@launch
-            }
-            if (!existingUser.isActive) {
-                _loginError.value = if (isEn) "Your account has been deactivated by Admin." else "আপনার অ্যাকাউন্টটি এডমিন কর্তৃক বন্ধ (Deactivated) করা হয়েছে।"
-                onResult(false)
-                return@launch
-            }
-            _currentUser.value = existingUser
-            _isLoggedIn.value = true
-            loginPrefs.edit().putString("logged_in_username", existingUser.username).apply()
-            _snackbarMessage.value = if (isEn) "Welcome, ${existingUser.fullName}!" else "স্বাগতম, ${existingUser.fullName}!"
-            onResult(true)
         }
     }
 
     fun logout() {
         loginPrefs.edit().remove("logged_in_username").apply()
+        firebaseStaffAuth.signOut()
         _currentUser.value = null
         _isLoggedIn.value = false
         _snackbarMessage.value = "লগআউট সফল হয়েছে।"
@@ -1397,6 +1411,20 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun closeUserManagement() {
         _isUserManagementOpen.value = false
+    }
+
+    private suspend fun requireShopOwnerAdmin(): String {
+        val current = _currentUser.value
+            ?: throw IllegalStateException("প্রথমে Admin হিসেবে লগইন করুন।")
+        require(current.isAdmin) { "শুধুমাত্র Admin এই কাজটি করতে পারবেন।" }
+        firebaseCloudAuth.ensureAnonymousSignedIn()
+        val uid = firebaseCloudAuth.currentUid
+            ?: throw IllegalStateException("Firebase সংযোগ পাওয়া যায়নি।")
+        val shopUid = _activeShopUid.value ?: uid
+        require(uid == shopUid && firebaseCloudSync.getMemberRole(shopUid, uid) == "owner") {
+            "শুধুমাত্র মূল Shop Owner ডিভাইস থেকে স্টাফ অ্যাকাউন্ট পরিচালনা করা যাবে।"
+        }
+        return shopUid
     }
 
     fun updateAdminCredentials(newUsername: String, newPassword: String, fullName: String) {
@@ -1432,17 +1460,20 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun toggleUserActive(user: AppUser, isActive: Boolean) {
         viewModelScope.launch {
-            if (user.isAdmin) {
-                _snackbarMessage.value = "এডমিন অ্যাকাউন্ট বন্ধ করা যাবে না।"
-                return@launch
-            }
-            val updated = user.copy(isActive = isActive)
-            repository.updateUser(updated)
-            triggerAutoCloudBackup()
-            _snackbarMessage.value = if (isActive) {
-                "ইউজার '${user.fullName}'-এর অ্যাকাউন্ট চালু করা হয়েছে।"
-            } else {
-                "ইউজার '${user.fullName}'-এর অ্যাকাউন্ট বন্ধ (Deactivated) করা হয়েছে।"
+            try {
+                if (user.isAdmin) throw IllegalStateException("এডমিন অ্যাকাউন্ট বন্ধ করা যাবে না।")
+                val shopUid = requireShopOwnerAdmin()
+                val updated = user.copy(isActive = isActive, password = "")
+                firebaseStaffAuth.updateStaff(shopUid, updated)
+                repository.updateUser(updated)
+                refreshCloudStaffUsers(shopUid)
+                _snackbarMessage.value = if (isActive) {
+                    "ইউজার '${user.fullName}'-এর অ্যাকাউন্ট চালু করা হয়েছে।"
+                } else {
+                    "ইউজার '${user.fullName}'-এর অ্যাকাউন্ট বন্ধ (Deactivated) করা হয়েছে।"
+                }
+            } catch (error: Exception) {
+                _snackbarMessage.value = error.localizedMessage ?: "স্টাফ অ্যাকাউন্ট আপডেট করা যায়নি।"
             }
         }
     }
@@ -1465,66 +1496,80 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
         canAccessSettings: Boolean = false
     ) {
         viewModelScope.launch {
-            val trimmedUser = username.trim()
-            val trimmedPass = password.trim()
-            val trimmedName = fullName.trim()
-
-            if (trimmedUser.isBlank() || trimmedPass.isBlank() || trimmedName.isBlank()) {
-                _snackbarMessage.value = "ইউজার তৈরির জন্য নাম, ইউজারনেম ও পাসওয়ার্ড আবশ্যক।"
-                return@launch
+            try {
+                val shopUid = requireShopOwnerAdmin()
+                val trimmedUser = username.trim()
+                val trimmedPass = password.trim()
+                val trimmedName = fullName.trim()
+                require(trimmedUser.isNotBlank() && trimmedPass.isNotBlank() && trimmedName.isNotBlank()) {
+                    "ইউজার তৈরির জন্য নাম, ইউজারনেম ও পাসওয়ার্ড আবশ্যক।"
+                }
+                require(!role.equals("ADMIN", ignoreCase = true)) {
+                    "স্টাফ অ্যাকাউন্টকে Admin role দেওয়া যাবে না।"
+                }
+                val existing = repository.getUserByUsername(trimmedUser)
+                require(existing == null || !existing.isAdmin) {
+                    "এই ইউজারনেমটি Admin অ্যাকাউন্টের জন্য সংরক্ষিত।"
+                }
+                val newUser = AppUser(
+                    username = trimmedUser,
+                    password = "",
+                    fullName = trimmedName,
+                    role = role,
+                    phone = phone.trim(),
+                    isActive = true,
+                    canAddStock = canAddStock,
+                    canEditStock = canEditStock,
+                    canDeleteStock = canDeleteStock,
+                    canSellProduct = canSellProduct,
+                    canEditSale = canEditSale,
+                    canDeleteSale = canDeleteSale,
+                    canManageExpenses = canManageExpenses,
+                    canManageEmployees = canManageEmployees,
+                    canViewReports = canViewReports,
+                    canAccessSettings = canAccessSettings
+                )
+                firebaseStaffAuth.createStaff(shopUid, newUser, trimmedPass)
+                repository.addUser(newUser)
+                refreshCloudStaffUsers(shopUid)
+                _snackbarMessage.value = "নতুন ইউজার '$trimmedName' Firebase-এ তৈরি হয়েছে!"
+            } catch (error: Exception) {
+                _snackbarMessage.value = error.localizedMessage ?: "নতুন ইউজার তৈরি করা যায়নি।"
             }
-
-            val existing = repository.getUserByUsername(trimmedUser)
-            if (existing != null) {
-                _snackbarMessage.value = "ইউজারনেম '$trimmedUser' ইতিমধ্যে ব্যবহৃত হয়েছে।"
-                return@launch
-            }
-
-            val newUser = AppUser(
-                username = trimmedUser,
-                password = trimmedPass,
-                fullName = trimmedName,
-                role = role,
-                phone = phone.trim(),
-                isActive = true,
-                canAddStock = canAddStock,
-                canEditStock = canEditStock,
-                canDeleteStock = canDeleteStock,
-                canSellProduct = canSellProduct,
-                canEditSale = canEditSale,
-                canDeleteSale = canDeleteSale,
-                canManageExpenses = canManageExpenses,
-                canManageEmployees = canManageEmployees,
-                canViewReports = canViewReports,
-                canAccessSettings = canAccessSettings
-            )
-            repository.addUser(newUser)
-            triggerAutoCloudBackup()
-            _snackbarMessage.value = "নতুন ইউজার '$trimmedName' সফলভাবে তৈরি হয়েছে!"
         }
     }
 
     fun updateUser(user: AppUser) {
         viewModelScope.launch {
-            repository.updateUser(user)
-            triggerAutoCloudBackup()
-            _snackbarMessage.value = "ইউজার '${user.fullName}' আপডেট করা হয়েছে।"
+            try {
+                if (user.isAdmin) throw IllegalStateException("Admin প্রোফাইল এখানে পরিবর্তন করা যাবে না।")
+                val shopUid = requireShopOwnerAdmin()
+                val safeUser = user.copy(password = "")
+                firebaseStaffAuth.updateStaff(shopUid, safeUser)
+                repository.updateUser(safeUser)
+                refreshCloudStaffUsers(shopUid)
+                _snackbarMessage.value = "ইউজার '${user.fullName}' আপডেট করা হয়েছে।"
+            } catch (error: Exception) {
+                _snackbarMessage.value = error.localizedMessage ?: "ইউজার আপডেট করা যায়নি।"
+            }
         }
     }
 
     fun deleteUser(user: AppUser) {
         viewModelScope.launch {
-            if (user.isAdmin) {
-                _snackbarMessage.value = "এডমিন অ্যাকাউন্ট মুছে ফেলা সম্ভব নয়!"
-                return@launch
+            try {
+                if (user.isAdmin) throw IllegalStateException("এডমিন অ্যাকাউন্ট মুছে ফেলা সম্ভব নয়!")
+                if (_currentUser.value?.username.equals(user.username, ignoreCase = true)) {
+                    throw IllegalStateException("বর্তমান লগইন করা অ্যাকাউন্ট মুছে ফেলা যাবে না!")
+                }
+                val shopUid = requireShopOwnerAdmin()
+                firebaseStaffAuth.deleteStaff(shopUid, user)
+                repository.deleteUser(user)
+                refreshCloudStaffUsers(shopUid)
+                _snackbarMessage.value = "ইউজার '${user.fullName}' সফলভাবে ডিলিট করা হয়েছে।"
+            } catch (error: Exception) {
+                _snackbarMessage.value = error.localizedMessage ?: "ইউজার ডিলিট করা যায়নি।"
             }
-            if (_currentUser.value?.id == user.id) {
-                _snackbarMessage.value = "বর্তমান লগইন করা অ্যাকাউন্ট মুছে ফেলা যাবে না!"
-                return@launch
-            }
-            repository.deleteUser(user)
-            triggerAutoCloudBackup()
-            _snackbarMessage.value = "ইউজার '${user.fullName}' সফলভাবে ডিলিট করা হয়েছে।"
         }
     }
 
