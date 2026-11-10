@@ -75,7 +75,10 @@ fun LoginScreen(
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
+    var pairingCode by remember { mutableStateOf("") }
     val loginError by viewModel.loginError.collectAsStateWithLifecycle()
+    val cloudAuthMessage by viewModel.cloudAuthMessage.collectAsStateWithLifecycle()
+    val isCloudAuthBusy by viewModel.isCloudAuthBusy.collectAsStateWithLifecycle()
     val strings = LocalAppStrings.current
     val isEnglish = strings.tabDashboard == "Dashboard"
 
@@ -254,6 +257,65 @@ fun LoginScreen(
                         )
                     }
 
+                }
+            }
+
+            // Pair a freshly installed device before staff login.
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(18.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.CloudSync,
+                            contentDescription = "Shop pairing",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(
+                            text = "Join Existing Shop",
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                    Text(
+                        text = "নতুন ফোনে Staff লগইনের আগে Admin ফোনের Pairing Code দিয়ে দোকানে যুক্ত করুন।",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    OutlinedTextField(
+                        value = pairingCode,
+                        onValueChange = {
+                            pairingCode = it.uppercase().filter { ch -> ch.isLetterOrDigit() || ch == '-' }.take(19)
+                        },
+                        label = { Text("Enter Pairing Code") },
+                        placeholder = { Text("XXXX-XXXX-XXXX-XXXX") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    )
+                    OutlinedButton(
+                        onClick = { viewModel.joinShopWithPairingCode(pairingCode) },
+                        enabled = !isCloudAuthBusy && pairingCode.count { it.isLetterOrDigit() } == 16,
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(imageVector = Icons.Default.CloudSync, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(if (isCloudAuthBusy) "Please wait..." else "Join Existing Shop")
+                    }
+                    if (!cloudAuthMessage.isNullOrBlank()) {
+                        Text(
+                            text = cloudAuthMessage.orEmpty(),
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
         }
