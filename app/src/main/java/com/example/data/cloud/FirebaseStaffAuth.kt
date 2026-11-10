@@ -39,10 +39,9 @@ class FirebaseStaffAuth(
         }
 
         val syntheticEmail = "staff-${UUID.randomUUID()}@appleareashop.firebaseapp.com"
-        var createdUid: String? = null
         try {
             val result = staffAuth.createUserWithEmailAndPassword(syntheticEmail, password).await()
-            createdUid = result.user?.uid
+            val createdUid = result.user?.uid
                 ?: throw IllegalStateException("Firebase স্টাফ অ্যাকাউন্ট তৈরি করতে পারেনি।")
 
             profileRef.set(profileMap(user, createdUid, syntheticEmail)).await()
@@ -85,6 +84,22 @@ class FirebaseStaffAuth(
         if (!profile.exists() || profile.getBoolean("isActive") != true) return null
         if (profile.getString("authUid") != staffAuth.currentUser?.uid) return null
         return profile.toAppUser()
+    }
+
+    fun listenForStaffProfile(
+        shopUid: String,
+        username: String,
+        onChanged: (AppUser?) -> Unit
+    ): com.google.firebase.firestore.ListenerRegistration {
+        return staffCollection(shopUid).document(usernameKey(username))
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) return@addSnapshotListener
+                if (snapshot == null || !snapshot.exists() || snapshot.getBoolean("isActive") != true) {
+                    onChanged(null)
+                } else {
+                    onChanged(snapshot.toAppUser())
+                }
+            }
     }
 
     suspend fun listStaff(shopUid: String): List<AppUser> {
