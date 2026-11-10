@@ -191,15 +191,10 @@ fun UserManagementDialog(
                                 Spacer(modifier = Modifier.width(8.dp))
                                 Column {
                                     Text(
-                                        text = "এডমিন প্রোফাইল (${currentUser?.username ?: "CONOCK"})",
+                                        text = "এডমিন প্রোফাইল",
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 13.5.sp,
                                         color = AppleBlue
-                                    )
-                                    Text(
-                                        text = "ডিফল্ট: CONOCK | পাসওয়ার্ড: 1219",
-                                        fontSize = 11.sp,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
                             }
