@@ -113,7 +113,18 @@ object PdfInvoiceGenerator {
         paint.color = Color.parseColor("#CBD5E1")
         canvas.drawLine(40f, 146f, (PAGE_WIDTH - 40).toFloat(), 146f, paint)
 
-        // Customer Details (No tinted box behind - clean white background)
+        // Light blue rounded box covering customer, product, pricing and payment details
+        paint.style = Paint.Style.FILL
+        paint.color = Color.parseColor("#EFF6FF")
+        canvas.drawRoundRect(40f, 154f, (PAGE_WIDTH - 40).toFloat(), 394f, 10f, 10f, paint)
+
+        paint.style = Paint.Style.STROKE
+        paint.strokeWidth = 1f
+        paint.color = Color.parseColor("#BFDBFE")
+        canvas.drawRoundRect(40f, 154f, (PAGE_WIDTH - 40).toFloat(), 394f, 10f, 10f, paint)
+
+        paint.style = Paint.Style.FILL
+        // Customer Details
         paint.style = Paint.Style.FILL
         paint.textAlign = Paint.Align.LEFT
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
