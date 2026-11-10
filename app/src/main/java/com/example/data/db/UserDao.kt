@@ -26,8 +26,14 @@ interface UserDao {
     @Query("SELECT COUNT(*) FROM app_users")
     suspend fun getUserCount(): Int
 
-    @Query("SELECT COUNT(*) FROM app_users WHERE role = 'ADMIN'")
+    @Query("SELECT COUNT(*) FROM app_users WHERE UPPER(role) = 'ADMIN'")
     suspend fun getAdminCount(): Int
+
+    @Query("SELECT * FROM app_users WHERE UPPER(role) = 'ADMIN' ORDER BY createdAt ASC LIMIT 1")
+    suspend fun getPrimaryAdmin(): AppUser?
+
+    @Query("DELETE FROM app_users WHERE UPPER(role) = 'ADMIN' AND id != :keepId")
+    suspend fun deleteOtherAdmins(keepId: Long)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertUser(user: AppUser): Long
