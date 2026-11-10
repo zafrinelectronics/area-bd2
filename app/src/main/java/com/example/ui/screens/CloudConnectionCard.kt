@@ -90,7 +90,7 @@ fun CloudConnectionCard(
             )
             Button(
                 onClick = onCreatePairingCode,
-                enabled = !isBusy && !accountEmail.isNullOrBlank(),
+                enabled = !isBusy,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text(if (isBusy) "Please wait..." else "Create Pairing Code (Shop Owner)")
