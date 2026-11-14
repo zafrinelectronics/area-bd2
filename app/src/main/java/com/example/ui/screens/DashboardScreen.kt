@@ -84,9 +84,6 @@ import com.example.ui.theme.AppleBlue
 import com.example.viewmodel.AppTab
 import com.example.viewmodel.DashboardMetrics
 import com.example.viewmodel.InventoryViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
