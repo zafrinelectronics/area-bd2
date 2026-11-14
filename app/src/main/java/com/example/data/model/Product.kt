@@ -1,5 +1,6 @@
 package com.example.data.model
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -31,5 +32,6 @@ data class Product(
     val returnRefundAmount: Double = 0.0,// সাপ্লায়ার থেকে ফেরত প্রাপ্ত অর্থ (যদি থাকে)
     val returnNotes: String = "",        // রিটার্ন সংক্রান্ত মন্তব্য
     val createdAt: Long = System.currentTimeMillis(),
+    @ColumnInfo(defaultValue = "'New'")
     val productType: String = "New"
 )
