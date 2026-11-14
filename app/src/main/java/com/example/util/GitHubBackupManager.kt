@@ -454,6 +454,7 @@ object GitHubBackupManager {
             put("batteryPresets", JSONArray(settings.batteryPresets))
             put("boxConditionPresets", JSONArray(settings.boxConditionPresets))
             put("supplierPresets", JSONArray(settings.supplierPresets))
+            put("bankAccounts", JSONArray(settings.bankAccounts))
         }
         root.put("settings", settingsObj)
 
@@ -475,6 +476,7 @@ object GitHubBackupManager {
                 put("status", p.status)
                 put("notes", p.notes)
                 put("createdAt", p.createdAt)
+                put("productType", p.productType)
                 put("returnReason", p.returnReason)
                 put("returnedAt", p.returnedAt ?: JSONObject.NULL)
                 put("returnRefundAmount", p.returnRefundAmount)
@@ -608,7 +610,8 @@ object GitHubBackupManager {
                     colorPresets = parseStringList(obj.optJSONArray("colorPresets")),
                     batteryPresets = parseStringList(obj.optJSONArray("batteryPresets")),
                     boxConditionPresets = parseStringList(obj.optJSONArray("boxConditionPresets")),
-                    supplierPresets = parseStringList(obj.optJSONArray("supplierPresets"))
+                    supplierPresets = parseStringList(obj.optJSONArray("supplierPresets")),
+                    bankAccounts = parseStringList(obj.optJSONArray("bankAccounts"))
                 )
             }
 
@@ -637,7 +640,8 @@ object GitHubBackupManager {
                             returnedAt = if (p.has("returnedAt") && !p.isNull("returnedAt") && p.optLong("returnedAt", 0L) > 0L) p.optLong("returnedAt") else null,
                             returnRefundAmount = p.optDouble("returnRefundAmount", 0.0),
                             returnNotes = p.optString("returnNotes", ""),
-                            createdAt = p.optLong("createdAt", System.currentTimeMillis())
+                            createdAt = p.optLong("createdAt", System.currentTimeMillis()),
+                            productType = p.optString("productType", "New")
                         )
                     )
                 }
