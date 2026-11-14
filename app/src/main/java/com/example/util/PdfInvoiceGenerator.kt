@@ -240,7 +240,7 @@ object PdfInvoiceGenerator {
         addWrappedPolicy(3, shopSettings.warrantyExchangeDeduction)
 
         val policyStartY = 447f
-        val policyLineHeight = 17f
+        val policyLineHeight = 28f
         val noteHeight = if (sale.remarks.isNotBlank()) 18f else 0f
         val policyBoxBottom = maxOf(566f, policyStartY + policyLines.size * policyLineHeight + noteHeight + 12f)
 
@@ -261,7 +261,7 @@ object PdfInvoiceGenerator {
 
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.color = Color.parseColor("#451A03")
-        paint.textSize = 13f
+        paint.textSize = 26f
         var policyY = policyStartY
         policyLines.forEach { line ->
             canvas.drawText(line, policyLeft, policyY, paint)
@@ -286,7 +286,7 @@ object PdfInvoiceGenerator {
         // Center QR Code with Equal Signatures on both sides (কিউ আর কোড বরাবর দু'পাশে সমান থাকবে)
         val qrSize = 60
         val qrLeft = (PAGE_WIDTH - qrSize) / 2
-        val qrTop = 636
+        val qrTop = (disclaimerY + 28f).toInt()
         try {
             val qrDrawable = androidx.core.content.ContextCompat.getDrawable(context, com.example.R.drawable.shop_qr_code)
             if (qrDrawable != null) {
@@ -298,7 +298,7 @@ object PdfInvoiceGenerator {
         // Signature lines (সমান দৈর্ঘ্য ১৪০ পয়েন্ট এবং সমান উচ্চতা)
         paint.strokeWidth = 1f
         paint.color = Color.parseColor("#94A3B8")
-        val sigLineY = 672f
+        val sigLineY = qrTop + 68f
         val leftLineStart = 54f
         val leftLineEnd = 194f
         val rightLineStart = (PAGE_WIDTH - 194).toFloat()
@@ -311,7 +311,7 @@ object PdfInvoiceGenerator {
         paint.textAlign = Paint.Align.CENTER
         paint.textSize = 9.5f
         paint.color = Color.parseColor("#334155")
-        val textY = 688f
+        val textY = sigLineY + 16f
         val leftCenter = (leftLineStart + leftLineEnd) / 2
         val rightCenter = (rightLineStart + rightLineEnd) / 2
         canvas.drawText("ক্রেতার স্বাক্ষর", leftCenter, textY, paint)
@@ -322,7 +322,7 @@ object PdfInvoiceGenerator {
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.textSize = 8.5f
         paint.color = Color.parseColor("#94A3B8")
-        canvas.drawText("${shopSettings.shopName} • ${shopSettings.shopTagline}", (PAGE_WIDTH / 2).toFloat(), 724f, paint)
+        canvas.drawText("${shopSettings.shopName} • ${shopSettings.shopTagline}", (PAGE_WIDTH / 2).toFloat(), sigLineY + 46f, paint)
     }
     /**
      * Saves the PDF to user's device Downloads directory and offers immediate viewing.
