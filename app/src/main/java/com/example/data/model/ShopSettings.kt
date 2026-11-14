@@ -31,7 +31,8 @@ data class ShopSettings(
     val batteryPresets: List<String> = listOf("100% (Brand New)", "98%", "95%", "92%", "89%", "85%"),
     val boxConditionPresets: List<String> = listOf("সিল প্যাক (Sealed Box)", "বক্স সহ (Original Box)", "আইএমইআই ম্যাচিং বক্স", "বক্স ছাড়া (Device Only)", "চার্জার সহ"),
     val supplierPresets: List<String> = listOf("Dubai Stock", "USA LL/A", "Singapore ZP/A", "Japan J/A", "Local Dealer", "Customer Exchange"),
-    val paymentMethodPresets: List<String> = listOf("ক্যাশ (Cash)", "বিকাশ (bKash)", "নগদ (Nagad)", "ব্যাংক কার্ড", "ক্যাশ + বিকাশ")
+    val paymentMethodPresets: List<String> = listOf("ক্যাশ (Cash)", "বিকাশ (bKash)", "নগদ (Nagad)", "ব্যাংক কার্ড", "ক্যাশ + বিকাশ", "Bank Transfer"),
+    val bankAccounts: List<String> = emptyList()
 ) {
     val fullWarrantyText: String
         get() = "• $warrantyReplacement\n• $warrantyService\n• $warrantyExchangeDeduction"
