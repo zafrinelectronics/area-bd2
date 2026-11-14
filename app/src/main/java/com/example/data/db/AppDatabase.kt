@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import com.example.data.model.AppUser
 import com.example.data.model.Employee
 import com.example.data.model.Expense
@@ -13,7 +15,7 @@ import com.example.data.model.Sale
 
 @Database(
     entities = [Product::class, Sale::class, Expense::class, Employee::class, SalaryPayment::class, AppUser::class],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -24,6 +26,12 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
 
     companion object {
+        private val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE products ADD COLUMN productType TEXT NOT NULL DEFAULT 'New'")
+            }
+        }
+
         @Volatile
         private var INSTANCE: AppDatabase? = null
 
@@ -37,6 +45,7 @@ abstract class AppDatabase : RoomDatabase() {
                     // Intentionally do not use fallbackToDestructiveMigration():
                     // if a future schema version has no migration, fail safely
                     // instead of silently deleting the shop's existing data.
+                    .addMigrations(MIGRATION_4_5)
                     .build()
                 INSTANCE = instance
                 instance
