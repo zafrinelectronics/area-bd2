@@ -54,6 +54,7 @@ enum class AppTab {
     TRANSACTIONS,
     REPORTS,
     SETTINGS,
+    ACCOUNTS,
     MORE
 }
 
