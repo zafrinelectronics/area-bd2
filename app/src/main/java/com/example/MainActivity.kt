@@ -210,8 +210,16 @@ fun MainAppContent(viewModel: InventoryViewModel) {
         if (shopSettings.showSettingsTab) add(Triple(AppTab.SETTINGS, shopSettings.customTabSettings.ifBlank { "Settings" }, Icons.Default.Settings))
     }
 
-    // Drawer-only destinations must remain selected even when they are not bottom tabs.
+    // Hiding a destination only removes its bottom navigation item.
+    // Every destination remains accessible from the side quick menu.
     val drawerOnlyTabs = setOf(
+        AppTab.DASHBOARD,
+        AppTab.STOCK,
+        AppTab.SALES,
+        AppTab.EXPENSES,
+        AppTab.EMPLOYEES,
+        AppTab.REPORTS,
+        AppTab.SETTINGS,
         AppTab.PURCHASE,
         AppTab.CUSTOMERS,
         AppTab.SUPPLIERS,
@@ -483,7 +491,8 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                             "Employees & Salary" to AppTab.EMPLOYEES,
                             "Reports" to AppTab.REPORTS,
                             "Settings" to AppTab.SETTINGS,
-                            "Accounts" to AppTab.ACCOUNTS
+                            "Accounts" to AppTab.ACCOUNTS,
+                            "More" to AppTab.MORE
                         )
                         menuItems.forEach { (label, tab) ->
                             NavigationDrawerItem(
