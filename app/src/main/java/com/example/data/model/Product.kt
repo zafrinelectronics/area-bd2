@@ -30,5 +30,6 @@ data class Product(
     val returnedAt: Long? = null,        // রিটার্ন করার তারিখ
     val returnRefundAmount: Double = 0.0,// সাপ্লায়ার থেকে ফেরত প্রাপ্ত অর্থ (যদি থাকে)
     val returnNotes: String = "",        // রিটার্ন সংক্রান্ত মন্তব্য
-    val createdAt: Long = System.currentTimeMillis()
+    val createdAt: Long = System.currentTimeMillis(),
+    val productType: String = "New"
 )
