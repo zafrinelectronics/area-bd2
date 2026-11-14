@@ -412,7 +412,7 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                 initialBatchMode = isBatchMode,
                 shopSettings = shopSettings,
                 onUpdateShopSettings = { viewModel.updateShopSettings(it) },
-                onSave = { company, model, variant, color, battery, box, supplier, purchasePrice, targetPrice, imei, notes ->
+                onSave = { company, model, variant, color, battery, box, supplier, purchasePrice, targetPrice, imei, notes, productType ->
                     viewModel.saveProduct(
                         company = company,
                         model = model,
@@ -424,10 +424,11 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                         purchasePrice = purchasePrice,
                         targetSalePrice = targetPrice,
                         imei = imei,
-                        notes = notes
+                        notes = notes,
+                        productType = productType
                     )
                 },
-                onSaveBatch = { company, model, variant, color, battery, box, supplier, purchasePrice, targetPrice, imeis, notes ->
+                onSaveBatch = { company, model, variant, color, battery, box, supplier, purchasePrice, targetPrice, imeis, notes, productType ->
                     viewModel.saveBatchProducts(
                         company = company,
                         model = model,
@@ -439,7 +440,8 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                         purchasePrice = purchasePrice,
                         targetSalePrice = targetPrice,
                         imeis = imeis,
-                        notes = notes
+                        notes = notes,
+                        productType = productType
                     )
                 },
                 onBack = { viewModel.closeAddEdit() }
