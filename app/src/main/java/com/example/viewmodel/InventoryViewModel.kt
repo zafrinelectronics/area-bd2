@@ -710,7 +710,8 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
         purchasePrice: Double,
         targetSalePrice: Double,
         imei: String,
-        notes: String
+        notes: String,
+        productType: String
     ) {
         viewModelScope.launch {
             val current = _editingProduct.value
@@ -726,7 +727,8 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                     purchasePrice = purchasePrice,
                     targetSalePrice = targetSalePrice,
                     imei = imei.trim(),
-                    notes = notes.trim()
+                    notes = notes.trim(),
+                    productType = productType
                 )
                 repository.updateProduct(updated)
                 triggerAutoCloudBackup()
@@ -744,7 +746,8 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                     targetSalePrice = targetSalePrice,
                     imei = imei.trim(),
                     notes = notes.trim(),
-                    status = ProductStatus.IN_STOCK.name
+                    status = ProductStatus.IN_STOCK.name,
+                    productType = productType
                 )
                 repository.addProduct(newProduct)
                 NotificationHelper.notifyStockAdded(getApplication(), newProduct.model, newProduct.imei)
@@ -767,7 +770,8 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
         purchasePrice: Double,
         targetSalePrice: Double,
         imeis: List<String>,
-        notes: String
+        notes: String,
+        productType: String
     ) {
         viewModelScope.launch {
             val products = imeis.mapIndexed { index, imeiItem ->
@@ -783,7 +787,8 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
                     targetSalePrice = targetSalePrice,
                     imei = imeiItem.trim(),
                     notes = if (imeis.size > 1) "$notes (Item #${index + 1} of ${imeis.size})" else notes,
-                    status = ProductStatus.IN_STOCK.name
+                    status = ProductStatus.IN_STOCK.name,
+                    productType = productType
                 )
             }
             repository.addProducts(products)
