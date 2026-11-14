@@ -1271,7 +1271,8 @@ fun AddEditProductScreen(
                                 cost,
                                 target,
                                 finalImei,
-                                notes
+                                notes,
+                                productType
                             )
                         } else {
                             // Batch multiple items save: fill blank IMEIs with auto-generated serials
@@ -1292,7 +1293,8 @@ fun AddEditProductScreen(
                                 cost,
                                 target,
                                 validImeis,
-                                notes
+                                notes,
+                                productType
                             )
                         }
                     },
