@@ -183,37 +183,7 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Surface(
-                            shape = CircleShape,
-                            color = AppleBlue.copy(alpha = 0.15f),
-                            modifier = Modifier.size(32.dp)
-                        ) {
-                            Box(contentAlignment = Alignment.Center) {
-                                Icon(
-                                    imageVector = if (currentUser?.isAdmin == true) Icons.Default.Shield else Icons.Default.Person,
-                                    contentDescription = null,
-                                    tint = AppleBlue,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        }
-                        Column {
-                            Text(
-                                text = currentUser?.fullName ?: "CONOCK (Admin)",
-                                fontSize = 12.5.sp,
-                                fontWeight = FontWeight.Bold
-                            )
-                            Text(
-                                text = "User: ${currentUser?.username ?: "CONOCK"} (${if (currentUser?.isAdmin == true) "Admin" else "Staff"})",
-                                fontSize = 10.sp,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
+                    Spacer(modifier = Modifier.weight(1f))
 
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         if (currentUser?.isAdmin == true) {
