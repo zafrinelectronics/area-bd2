@@ -109,7 +109,9 @@ fun AddEditProductScreen(
     // Mode toggle: Single vs Batch (only when adding new, not editing)
     var isBatchMode by remember { mutableStateOf(initialBatchMode && editingProduct == null) }
 
-    var productType by remember { mutableStateOf(editingProduct?.productType ?: "New") }\n\n    // 1. কোম্পানি (Company)
+    var productType by remember { mutableStateOf(editingProduct?.productType ?: "New") }
+
+    // 1. কোম্পানি (Company)
     var company by remember { mutableStateOf(editingProduct?.company ?: (shopSettings.companyPresets.firstOrNull() ?: "Apple")) }
     // 2. মডেল (Model)
     var model by remember { mutableStateOf(editingProduct?.model ?: "") }
@@ -478,6 +480,23 @@ fun AddEditProductScreen(
                                 },
                                 fontSize = 11.sp,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
+
+            // Product type selector
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(if (isEnglish) "Product Category" else "পণ্যের ধরন", fontWeight = FontWeight.SemiBold, fontSize = 13.sp, color = MaterialTheme.colorScheme.primary)
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        listOf("New", "Used").forEach { type ->
+                            FilterChip(
+                                selected = productType == type,
+                                onClick = { productType = type },
+                                label = { Text(if (type == "New") (if (isEnglish) "New" else "নতুন") else (if (isEnglish) "Used" else "ব্যবহৃত")) },
+                                colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AppleBlue, selectedLabelColor = Color.White)
                             )
                         }
                     }
