@@ -57,6 +57,7 @@ import com.example.ui.LocalAppStrings
 import com.example.ui.components.GitHubSyncDialog
 import com.example.ui.components.ScannerDialog
 import com.example.ui.screens.AddEditProductScreen
+import com.example.ui.screens.AccountsScreen
 import com.example.ui.screens.DashboardScreen
 import com.example.ui.screens.DuePaymentDialog
 import com.example.ui.screens.EditSaleDialog
@@ -210,7 +211,7 @@ fun MainAppContent(viewModel: InventoryViewModel) {
     }
 
     LaunchedEffect(currentTab, visibleBottomTabs) {
-        if (visibleBottomTabs.none { it.first == currentTab }) {
+        if (currentTab != AppTab.ACCOUNTS && visibleBottomTabs.none { it.first == currentTab }) {
             viewModel.setTab(visibleBottomTabs.firstOrNull()?.first ?: AppTab.SETTINGS)
         }
     }
@@ -470,7 +471,8 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                             "Expenses / Cashbook" to AppTab.EXPENSES,
                             "Employees & Salary" to AppTab.EMPLOYEES,
                             "Reports" to AppTab.REPORTS,
-                            "Settings" to AppTab.SETTINGS
+                            "Settings" to AppTab.SETTINGS,
+                            "Accounts" to AppTab.ACCOUNTS
                         )
                         menuItems.forEach { (label, tab) ->
                             NavigationDrawerItem(
@@ -624,6 +626,10 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                         metrics = dashboardMetrics,
                         selectedPeriod = reportPeriod,
                         onPeriodSelect = { viewModel.setReportPeriod(it) }
+                    )
+                    AppTab.ACCOUNTS -> AccountsScreen(
+                        settings = shopSettings,
+                        onSave = { viewModel.updateShopSettings(it) }
                     )
                     AppTab.MORE -> MoreScreen(
                         onNavigate = { viewModel.setTab(it) },
