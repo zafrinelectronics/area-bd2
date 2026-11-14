@@ -210,8 +210,17 @@ fun MainAppContent(viewModel: InventoryViewModel) {
         if (shopSettings.showSettingsTab) add(Triple(AppTab.SETTINGS, shopSettings.customTabSettings.ifBlank { "Settings" }, Icons.Default.Settings))
     }
 
+    // Drawer-only destinations must remain selected even when they are not bottom tabs.
+    val drawerOnlyTabs = setOf(
+        AppTab.PURCHASE,
+        AppTab.CUSTOMERS,
+        AppTab.SUPPLIERS,
+        AppTab.TRANSACTIONS,
+        AppTab.ACCOUNTS,
+        AppTab.MORE
+    )
     LaunchedEffect(currentTab, visibleBottomTabs) {
-        if (currentTab != AppTab.ACCOUNTS && visibleBottomTabs.none { it.first == currentTab }) {
+        if (currentTab !in drawerOnlyTabs && visibleBottomTabs.none { it.first == currentTab }) {
             viewModel.setTab(visibleBottomTabs.firstOrNull()?.first ?: AppTab.SETTINGS)
         }
     }
