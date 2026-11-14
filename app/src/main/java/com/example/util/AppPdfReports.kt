@@ -39,6 +39,7 @@ object AppPdfReports {
             AppTab.EMPLOYEES -> "Employee and Salary Report"
             AppTab.REPORTS -> "Business Report"
             AppTab.SETTINGS -> "Shop Settings"
+            AppTab.ACCOUNTS -> "Accounts"
             AppTab.MORE -> "App Information"
         }
         when (tab) {
@@ -130,6 +131,7 @@ object AppPdfReports {
                 summary.addAll(listOf("দোকানের নাম" to settings.shopName, "ট্যাগলাইন" to settings.shopTagline, "ফোন" to settings.shopPhone, "ঠিকানা" to settings.shopAddress, "অ্যাপের ভাষা" to settings.appLanguage))
                 rows.addAll(listOf("রিপ্লেসমেন্ট নীতি: ${settings.warrantyReplacement}", "সার্ভিস নীতি: ${settings.warrantyService}", "এক্সচেঞ্জ নীতি: ${settings.warrantyExchangeDeduction}", "মেমো ফুটার: ${settings.memoFooterNote}"))
             }
+            AppTab.ACCOUNTS -> summary.add("সংরক্ষিত ব্যাংক অ্যাকাউন্ট" to settings.bankAccounts.size.toString())
             AppTab.MORE -> summary.add("দোকান" to settings.shopName)
         }
         PdfReportGenerator.export(context, settings.shopName, title, summary, rows)
