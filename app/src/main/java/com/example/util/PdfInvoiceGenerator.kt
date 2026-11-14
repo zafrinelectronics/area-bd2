@@ -239,7 +239,7 @@ object PdfInvoiceGenerator {
         addWrappedPolicy(2, shopSettings.warrantyService)
         addWrappedPolicy(3, shopSettings.warrantyExchangeDeduction)
 
-        val policyStartY = 447f
+        val policyStartY = 460f
         val policyLineHeight = 25f
         val noteHeight = if (sale.remarks.isNotBlank()) 18f else 0f
         val policyBoxBottom = maxOf(566f, policyStartY + policyLines.size * policyLineHeight + noteHeight + 12f)
