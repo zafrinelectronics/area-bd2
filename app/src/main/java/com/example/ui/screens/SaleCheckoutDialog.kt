@@ -79,12 +79,13 @@ fun SaleCheckoutDialog(
     var salePriceStr by remember { mutableStateOf(product.targetSalePrice.toLong().toString()) }
     var paidAmountStr by remember { mutableStateOf(product.targetSalePrice.toLong().toString()) }
     var paymentMethod by remember { mutableStateOf(shopSettings.paymentMethodPresets.firstOrNull() ?: "ক্যাশ (Cash)") }
+    var selectedBankAccount by remember { mutableStateOf(shopSettings.bankAccounts.firstOrNull().orEmpty()) }
     var warrantyInfo by remember { mutableStateOf(shopSettings.fullWarrantyText) }
     var remarks by remember { mutableStateOf("") }
 
     var validationError by remember { mutableStateOf<String?>(null) }
 
-    val paymentMethods = shopSettings.paymentMethodPresets
+    val paymentMethods = (shopSettings.paymentMethodPresets + "Bank Transfer").distinct()
 
     val salePrice = salePriceStr.toDoubleOrNull() ?: 0.0
     val paidAmount = paidAmountStr.toDoubleOrNull() ?: 0.0
@@ -360,6 +361,24 @@ fun SaleCheckoutDialog(
                     }
                 }
 
+                if (paymentMethod.contains("Bank Transfer", ignoreCase = true)) {
+                    Text("ব্যাংক অ্যাকাউন্ট নির্বাচন করুন:", fontSize = 12.sp, fontWeight = FontWeight.Medium)
+                    if (shopSettings.bankAccounts.isEmpty()) {
+                        Text("আগে বাম পাশের Quick Menu > Accounts থেকে ব্যাংক অ্যাকাউন্ট যোগ করুন।", color = MaterialTheme.colorScheme.error, fontSize = 12.sp)
+                    } else {
+                        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            shopSettings.bankAccounts.forEach { account ->
+                                FilterChip(
+                                    selected = selectedBankAccount == account,
+                                    onClick = { selectedBankAccount = account },
+                                    label = { Text(account, fontSize = 11.sp) },
+                                    colors = FilterChipDefaults.filterChipColors(selectedContainerColor = AppleBlue, selectedLabelColor = Color.White)
+                                )
+                            }
+                        }
+                    }
+                }
+
                 // Warranty
                 OutlinedTextField(
                     value = warrantyInfo,
@@ -400,14 +419,19 @@ fun SaleCheckoutDialog(
                             validationError = if (isEnglish) "Please enter a valid sale price." else "সঠিক বিক্রয় মূল্য লিখুন।"
                             return@Button
                         }
+                        if (paymentMethod.contains("Bank Transfer", ignoreCase = true) && selectedBankAccount.isBlank()) {
+                            validationError = "ব্যাংক ট্রান্সফারের জন্য একটি সংরক্ষিত ব্যাংক অ্যাকাউন্ট নির্বাচন করুন।"
+                            return@Button
+                        }
                         validationError = null
+                        val finalPaymentMethod = if (paymentMethod.contains("Bank Transfer", ignoreCase = true)) "$paymentMethod • $selectedBankAccount" else paymentMethod
                         onConfirmSale(
                             finalCustomerName,
                             finalCustomerPhone,
                             customerAddress.trim(),
                             salePrice,
                             paidAmount,
-                            paymentMethod,
+                            finalPaymentMethod,
                             warrantyInfo,
                             remarks.trim()
                         )
