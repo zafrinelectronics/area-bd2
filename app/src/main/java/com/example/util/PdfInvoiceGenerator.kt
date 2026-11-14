@@ -212,41 +212,76 @@ object PdfInvoiceGenerator {
         paint.textAlign = Paint.Align.LEFT
         canvas.drawText("পেমেন্ট মেথড: ${sale.paymentMethod}", 56f, 384f, paint)
 
-        // Warranty Policy Box (ONLY box retained as requested - with yellow/amber background)
+        // Large, bold and wrapped warranty policy so every condition is easy to read.
+        val policyLeft = 54f
+        val policyRight = (PAGE_WIDTH - 54).toFloat()
+        val policyWidth = policyRight - policyLeft
+        val policyLines = mutableListOf<String>()
+
+        fun addWrappedPolicy(number: Int, value: String) {
+            val words = value.trim().split(Regex("\\s+")).filter { it.isNotBlank() }
+            var line = "$number."
+            words.forEach { word ->
+                val candidate = if (line.isEmpty()) word else "$line $word"
+                if (paint.measureText(candidate) > policyWidth && line.isNotEmpty()) {
+                    policyLines.add(line)
+                    line = "   $word"
+                } else {
+                    line = candidate
+                }
+            }
+            if (line.isNotBlank()) policyLines.add(line)
+        }
+
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+        paint.textSize = 13f
+        addWrappedPolicy(1, shopSettings.warrantyReplacement)
+        addWrappedPolicy(2, shopSettings.warrantyService)
+        addWrappedPolicy(3, shopSettings.warrantyExchangeDeduction)
+
+        val policyStartY = 447f
+        val policyLineHeight = 17f
+        val noteHeight = if (sale.remarks.isNotBlank()) 18f else 0f
+        val policyBoxBottom = maxOf(566f, policyStartY + policyLines.size * policyLineHeight + noteHeight + 12f)
+
         paint.style = Paint.Style.FILL
         paint.color = Color.parseColor("#FEFCE8")
-        canvas.drawRoundRect(40f, 404f, (PAGE_WIDTH - 40).toFloat(), 544f, 10f, 10f, paint)
+        canvas.drawRoundRect(40f, 404f, (PAGE_WIDTH - 40).toFloat(), policyBoxBottom, 10f, 10f, paint)
 
         paint.style = Paint.Style.STROKE
         paint.color = Color.parseColor("#FEF08A")
-        canvas.drawRoundRect(40f, 404f, (PAGE_WIDTH - 40).toFloat(), 544f, 10f, 10f, paint)
+        canvas.drawRoundRect(40f, 404f, (PAGE_WIDTH - 40).toFloat(), policyBoxBottom, 10f, 10f, paint)
 
         paint.style = Paint.Style.FILL
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.color = Color.parseColor("#A16207")
-        paint.textSize = 10.5f
+        paint.textSize = 15f
         paint.textAlign = Paint.Align.LEFT
-        canvas.drawText("ওয়ারেন্টি ও গ্যারান্টি নীতিমালা / Warranty Policy", 54f, 424f, paint)
+        canvas.drawText("ওয়ারেন্টি ও গ্যারান্টি নীতিমালা / Warranty Policy", 54f, 429f, paint)
 
-        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
+        paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.color = Color.parseColor("#451A03")
-        paint.textSize = 9.5f
-        canvas.drawText("1. ${shopSettings.warrantyReplacement}", 54f, 446f, paint)
-        canvas.drawText("2. ${shopSettings.warrantyService}", 54f, 467f, paint)
-        canvas.drawText("3. ${shopSettings.warrantyExchangeDeduction}", 54f, 488f, paint)
+        paint.textSize = 13f
+        var policyY = policyStartY
+        policyLines.forEach { line ->
+            canvas.drawText(line, policyLeft, policyY, paint)
+            policyY += policyLineHeight
+        }
 
         if (sale.remarks.isNotBlank()) {
             paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC)
             paint.color = Color.parseColor("#78350F")
-            canvas.drawText("বিশেষ নোট: ${sale.remarks}", 54f, 512f, paint)
+            paint.textSize = 11f
+            canvas.drawText("বিশেষ নোট: ${sale.remarks}", 54f, policyY + 1f, paint)
         }
 
         // Bottom Disclaimers & Signatures
+        val disclaimerY = policyBoxBottom + 20f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.color = Color.parseColor("#64748B")
         paint.textSize = 8.5f
-        canvas.drawText("* বিক্রিত মাল ফেরত নেওয়া হয় না। ওয়ারেন্টির জন্য মূল ক্যাশমেমো সংরক্ষণ বাধ্যতামূলক।", 40f, 570f, paint)
-        canvas.drawText("* ${shopSettings.shopName} এর সাথে থাকার জন্য ধন্যবাদ!", 40f, 584f, paint)
+        canvas.drawText("* বিক্রিত মাল ফেরত নেওয়া হয় না। ওয়ারেন্টির জন্য মূল ক্যাশমেমো সংরক্ষণ বাধ্যতামূলক।", 40f, disclaimerY, paint)
+        canvas.drawText("* ${shopSettings.shopName} এর সাথে থাকার জন্য ধন্যবাদ!", 40f, disclaimerY + 14f, paint)
 
         // Center QR Code with Equal Signatures on both sides (কিউ আর কোড বরাবর দু'পাশে সমান থাকবে)
         val qrSize = 60
