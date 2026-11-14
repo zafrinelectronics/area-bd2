@@ -234,13 +234,13 @@ object PdfInvoiceGenerator {
         }
 
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        paint.textSize = 13f
+        paint.textSize = 20f
         addWrappedPolicy(1, shopSettings.warrantyReplacement)
         addWrappedPolicy(2, shopSettings.warrantyService)
         addWrappedPolicy(3, shopSettings.warrantyExchangeDeduction)
 
         val policyStartY = 447f
-        val policyLineHeight = 28f
+        val policyLineHeight = 25f
         val noteHeight = if (sale.remarks.isNotBlank()) 18f else 0f
         val policyBoxBottom = maxOf(566f, policyStartY + policyLines.size * policyLineHeight + noteHeight + 12f)
 
@@ -261,7 +261,7 @@ object PdfInvoiceGenerator {
 
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.color = Color.parseColor("#451A03")
-        paint.textSize = 26f
+        paint.textSize = 20f
         var policyY = policyStartY
         policyLines.forEach { line ->
             canvas.drawText(line, policyLeft, policyY, paint)
