@@ -51,7 +51,7 @@ class SettingsManager(context: Context) {
         val batteries = loadList("presets_batteries", listOf("100% (Brand New)", "98%", "95%", "92%", "89%", "85%"))
         val boxes = loadList("presets_boxes", listOf("সিল প্যাক (Sealed Box)", "বক্স সহ (Original Box)", "আইএমইআই ম্যাচিং বক্স", "বক্স ছাড়া (Device Only)", "চার্জার সহ"))
         val suppliers = loadList("presets_suppliers", listOf("Dubai Stock", "USA LL/A", "Singapore ZP/A", "Japan J/A", "Local Dealer", "Customer Exchange"))
-        val payments = loadList("presets_payments", listOf("ক্যাশ (Cash)", "বিকাশ (bKash)", "নগদ (Nagad)", "ব্যাংক কার্ড", "ক্যাশ + বিকাশ"))
+        val payments = loadList("presets_payments", listOf("ক্যাশ (Cash)", "বিকাশ (bKash)", "নগদ (Nagad)", "ব্যাংক কার্ড", "ক্যাশ + বিকাশ", "Bank Transfer"))
 
         return ShopSettings(
             appLanguage = appLanguage,
@@ -84,7 +84,8 @@ class SettingsManager(context: Context) {
             batteryPresets = batteries,
             boxConditionPresets = boxes,
             supplierPresets = suppliers,
-            paymentMethodPresets = payments
+            paymentMethodPresets = payments,
+            bankAccounts = loadList("bank_accounts", emptyList())
         )
     }
 
@@ -132,6 +133,7 @@ class SettingsManager(context: Context) {
         saveList("presets_boxes", newSettings.boxConditionPresets)
         saveList("presets_suppliers", newSettings.supplierPresets)
         saveList("presets_payments", newSettings.paymentMethodPresets)
+        saveList("bank_accounts", newSettings.bankAccounts)
 
         _settings.value = newSettings
     }
