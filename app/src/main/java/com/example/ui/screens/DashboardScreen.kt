@@ -186,21 +186,6 @@ fun DashboardScreen(
                     Spacer(modifier = Modifier.weight(1f))
 
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        if (currentUser?.isAdmin == true) {
-                            Button(
-                                onClick = onOpenUserManagement,
-                                colors = ButtonDefaults.buttonColors(containerColor = AppleBlue),
-                                shape = RoundedCornerShape(8.dp),
-                                modifier = Modifier
-                                    .height(32.dp)
-                                    .testTag("dashboard_user_management_btn")
-                            ) {
-                                Icon(Icons.Default.AdminPanelSettings, contentDescription = null, modifier = Modifier.size(14.dp))
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text("User Management", fontSize = 10.5.sp, fontWeight = FontWeight.Bold)
-                            }
-                        }
-
                         OutlinedButton(
                             onClick = onLogout,
                             shape = RoundedCornerShape(8.dp),
