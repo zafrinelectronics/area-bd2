@@ -86,7 +86,8 @@ fun AddEditProductScreen(
         purchasePrice: Double,
         targetSalePrice: Double,
         imei: String,
-        notes: String
+        notes: String,
+        productType: String
     ) -> Unit,
     onSaveBatch: (
         company: String,
@@ -99,15 +100,16 @@ fun AddEditProductScreen(
         purchasePrice: Double,
         targetSalePrice: Double,
         imeis: List<String>,
-        notes: String
-    ) -> Unit = { _, _, _, _, _, _, _, _, _, _, _ -> },
+        notes: String,
+        productType: String
+    ) -> Unit = { _, _, _, _, _, _, _, _, _, _, _, _ -> },
     initialBatchMode: Boolean = false,
     onBack: () -> Unit
 ) {
     // Mode toggle: Single vs Batch (only when adding new, not editing)
     var isBatchMode by remember { mutableStateOf(initialBatchMode && editingProduct == null) }
 
-    // 1. কোম্পানি (Company)
+    var productType by remember { mutableStateOf(editingProduct?.productType ?: "New") }\n\n    // 1. কোম্পানি (Company)
     var company by remember { mutableStateOf(editingProduct?.company ?: (shopSettings.companyPresets.firstOrNull() ?: "Apple")) }
     // 2. মডেল (Model)
     var model by remember { mutableStateOf(editingProduct?.model ?: "") }
