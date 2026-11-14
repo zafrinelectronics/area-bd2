@@ -186,18 +186,7 @@ fun DashboardScreen(
                     Spacer(modifier = Modifier.weight(1f))
 
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        OutlinedButton(
-                            onClick = onLogout,
-                            shape = RoundedCornerShape(8.dp),
-                            modifier = Modifier
-                                .height(32.dp)
-                                .testTag("dashboard_logout_btn"),
-                            border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFEF4444).copy(alpha = 0.6f))
-                        ) {
-                            Icon(Icons.Default.Logout, contentDescription = null, tint = Color(0xFFEF4444), modifier = Modifier.size(14.dp))
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text("Logout", fontSize = 10.5.sp, color = Color(0xFFEF4444), fontWeight = FontWeight.Bold)
-                        }
+
                     }
                 }
             }
