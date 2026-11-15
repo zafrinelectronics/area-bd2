@@ -673,7 +673,8 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                         onCreateShopPairingCode = { viewModel.createShopPairingCode() },
                         onJoinShopWithPairingCode = { code -> viewModel.joinShopWithPairingCode(code) },
                         onCloudSignIn = { email, password -> viewModel.signInToFirebaseCloud(email, password) },
-                        onCloudSignOut = { viewModel.signOutFromFirebaseCloud() }
+                        onCloudSignOut = { viewModel.signOutFromFirebaseCloud() },
+                        onCreateNewCloudShop = { viewModel.createNewCloudShop() }
                     )
                 }
             }
