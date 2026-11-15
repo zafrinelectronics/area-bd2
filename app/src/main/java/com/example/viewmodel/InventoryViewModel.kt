@@ -1402,7 +1402,7 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
 
                 val authenticatedUser = if (localUser?.isAdmin == true) {
                     if (deviceUid != shopUid || memberRole != "owner") {
-                        throw IllegalStateException("Admin লগইন শুধুমাত্র মূল Shop Owner ডিভাইসে অনুমোদিত।")
+                        throw IllegalStateException("Owner device check failed.\nDevice UID: $deviceUid\nActive Shop UID: $shopUid\nMember role: ${memberRole ?: "not found"}")
                     }
                     if (!localUser.isActive || localUser.password != trimmedPass) {
                         throw IllegalStateException(if (isEn) "Incorrect username or password." else "ইউজারনেম অথবা পাসওয়ার্ড ভুল হয়েছে।")
