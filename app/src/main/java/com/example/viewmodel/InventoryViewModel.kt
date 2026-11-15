@@ -1777,6 +1777,47 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    fun createNewCloudShop(username: String, password: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _isCloudAuthBusy.value = true
+            _cloudAuthMessage.value = null
+            try {
+                val localAdmin = repository.getUserByUsername(username.trim())
+                require(localAdmin?.isAdmin == true && localAdmin.isActive &&
+                    localAdmin.password == password.trim()) {
+                    "Admin ইউজারনেম বা পাসওয়ার্ড সঠিক নয়।"
+                }
+
+                cloudListener?.remove()
+                cloudListener = null
+                cloudPullJob?.cancel()
+                cloudPullJob = null
+                staffProfileListener?.remove()
+                staffProfileListener = null
+                firebaseStaffAuth.signOut()
+
+                val newUid = firebaseCloudAuth.startFreshAnonymousSession()
+                firebaseCloudSync.ensureOwnerShop(newUid)
+                check(firebaseCloudSync.getMemberRole(newUid, newUid) == "owner") {
+                    "নতুন Shop-এর Owner পরিচয় নিশ্চিত করা যায়নি।"
+                }
+
+                cloudPrefs.edit().putString("active_shop_uid", newUid).apply()
+                _activeShopUid.value = newUid
+                _cloudAccountEmail.value = "Automatic cloud sync"
+                _shopPairingCode.value = null
+                attachCloudListener(newUid)
+                triggerAutoCloudBackup()
+                _cloudAuthMessage.value = "নতুন Shop তৈরি হয়েছে। এখন আপনার Admin ইউজারনেম ও পাসওয়ার্ড দিয়ে লগইন করুন। স্থানীয় ডাটা অক্ষত আছে।"
+            } catch (error: Exception) {
+                _cloudAuthMessage.value = error.localizedMessage
+                    ?: "নতুন Shop তৈরি করা যায়নি। Firebase সংযোগ পরীক্ষা করুন।"
+            } finally {
+                _isCloudAuthBusy.value = false
+            }
+        }
+    }
+
     fun createNewCloudShop() {
         val current = _currentUser.value
         if (current?.isAdmin != true) {
