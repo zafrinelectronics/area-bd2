@@ -256,13 +256,13 @@ ${shopSettings.shopName} • ${shopSettings.shopPhone}
                         Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                             Text(
                                 text = strings.customerInfoSection,
-                                fontSize = 11.sp,
+                                fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = AppleBlue
                             )
                             Text(
                                 text = sale.customerName,
-                                fontSize = 14.sp,
+                                fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Row(
@@ -272,13 +272,13 @@ ${shopSettings.shopName} • ${shopSettings.shopPhone}
                             ) {
                                 Text(
                                     text = "${if (isEnglish) "Phone:" else "মোবাইল:"} ${sale.customerPhone}",
-                                    fontSize = 12.sp,
+                                    fontSize = 18.sp,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                                 if (sale.customerAddress.isNotBlank()) {
                                     Text(
                                         text = "${if (isEnglish) "Address:" else "ঠিকানা:"} ${sale.customerAddress}",
-                                        fontSize = 11.sp,
+                                        fontSize = 18.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                                         textAlign = TextAlign.End,
                                         modifier = Modifier.padding(start = 8.dp)
@@ -293,18 +293,18 @@ ${shopSettings.shopName} • ${shopSettings.shopPhone}
                         Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
                             Text(
                                 text = strings.productDetailsSection,
-                                fontSize = 11.sp,
+                                fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = AppleBlue
                             )
                             Text(
                                 text = sale.productDetails,
-                                fontSize = 14.sp,
+                                fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold
                             )
                             Text(
                                 text = "${strings.imeiLabel} ${sale.imei}",
-                                fontSize = 12.sp,
+                                fontSize = 18.sp,
                                 fontFamily = FontFamily.Monospace,
                                 color = MaterialTheme.colorScheme.onSurface
                             )
@@ -315,14 +315,14 @@ ${shopSettings.shopName} • ${shopSettings.shopPhone}
                                 if (sale.batteryHealth.isNotBlank()) {
                                     Text(
                                         text = "${strings.batteryLabel} ${sale.batteryHealth}",
-                                        fontSize = 11.sp,
+                                        fontSize = 18.sp,
                                         color = Color(0xFF10B981)
                                     )
                                 }
                                 if (sale.boxCondition.isNotBlank()) {
                                     Text(
                                         text = "${strings.boxLabel} ${sale.boxCondition}",
-                                        fontSize = 11.sp,
+                                        fontSize = 18.sp,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
                                 }
@@ -337,10 +337,10 @@ ${shopSettings.shopName} • ${shopSettings.shopPhone}
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(text = strings.totalSalePriceLabel, fontSize = 13.sp)
+                                Text(text = strings.totalSalePriceLabel, fontSize = 18.sp)
                                 Text(
                                     text = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(sale.salePrice, lang)}",
-                                    fontSize = 13.sp,
+                                    fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -348,10 +348,10 @@ ${shopSettings.shopName} • ${shopSettings.shopPhone}
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(text = strings.paidLabel, fontSize = 13.sp)
+                                Text(text = strings.paidLabel, fontSize = 18.sp)
                                 Text(
                                     text = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(sale.paidAmount, lang)}",
-                                    fontSize = 13.sp,
+                                    fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = Color(0xFF10B981)
                                 )
@@ -363,13 +363,13 @@ ${shopSettings.shopName} • ${shopSettings.shopPhone}
                             ) {
                                 Text(
                                     text = strings.dueLabel,
-                                    fontSize = 13.sp,
+                                    fontSize = 18.sp,
                                     fontWeight = FontWeight.Bold,
                                     color = if (sale.dueAmount > 0) Color(0xFFD97706) else Color(0xFF10B981)
                                 )
                                 Text(
                                     text = "${strings.currencySymbol} ${InventoryViewModel.formatAmount(sale.dueAmount, lang)}",
-                                    fontSize = 14.sp,
+                                    fontSize = 18.sp,
                                     fontWeight = FontWeight.ExtraBold,
                                     color = if (sale.dueAmount > 0) Color(0xFFD97706) else Color(0xFF10B981)
                                 )
@@ -379,8 +379,8 @@ ${shopSettings.shopName} • ${shopSettings.shopPhone}
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceBetween
                             ) {
-                                Text(text = "${strings.paymentMethodLabel}:", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text(text = sale.paymentMethod, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+                                Text(text = "${strings.paymentMethodLabel}:", fontSize = 18.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                Text(text = sale.paymentMethod, fontSize = 18.sp, fontWeight = FontWeight.Medium)
                             }
                         }
 
@@ -389,8 +389,8 @@ ${shopSettings.shopName} • ${shopSettings.shopPhone}
                             modifier = Modifier
                                 .fillMaxWidth(0.94f)
                                 .graphicsLayer {
-                                    scaleX = 0.85f
-                                    scaleY = 0.85f
+                                    scaleX = 0.68f
+                                    scaleY = 0.68f
                                 }
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(Color(0xFFFEFCE8))
@@ -414,7 +414,7 @@ ${shopSettings.shopName} • ${shopSettings.shopPhone}
                                         )
                                         Text(
                                             text = strings.warrantySection,
-                                            fontSize = 12.sp,
+                                            fontSize = 15.sp,
                                             fontWeight = FontWeight.Bold,
                                             color = Color(0xFFA16207)
                                         )
@@ -434,9 +434,9 @@ ${shopSettings.shopName} • ${shopSettings.shopPhone}
                                 }
                                 Text(
                                     text = sale.warrantyInfo.ifBlank { shopSettings.fullWarrantyText },
-                                    fontSize = 11.sp,
+                                    fontSize = 15.sp,
                                     color = Color(0xFF451A03),
-                                    lineHeight = 16.sp
+                                    lineHeight = 20.sp
                                 )
                             }
                         }
