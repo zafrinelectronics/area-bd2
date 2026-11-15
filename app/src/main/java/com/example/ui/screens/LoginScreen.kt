@@ -30,6 +30,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -41,6 +42,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -75,7 +77,8 @@ fun LoginScreen(
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
-    var pairingCode by remember { mutableStateOf("") }\n    var showNewShopConfirm by remember { mutableStateOf(false) }
+    var pairingCode by remember { mutableStateOf("") }
+    var showNewShopConfirm by remember { mutableStateOf(false) }
     val loginError by viewModel.loginError.collectAsStateWithLifecycle()
     val cloudAuthMessage by viewModel.cloudAuthMessage.collectAsStateWithLifecycle()
     val isCloudAuthBusy by viewModel.isCloudAuthBusy.collectAsStateWithLifecycle()
