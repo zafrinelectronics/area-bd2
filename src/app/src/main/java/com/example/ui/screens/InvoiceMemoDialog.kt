@@ -49,6 +49,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
@@ -387,6 +388,10 @@ ${shopSettings.shopName} • ${shopSettings.shopPhone}
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth(0.94f)
+                                .graphicsLayer {
+                                    scaleX = 0.85f
+                                    scaleY = 0.85f
+                                }
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(Color(0xFFFEFCE8))
                                 .border(1.dp, Color(0xFFFEF08A), RoundedCornerShape(10.dp))
