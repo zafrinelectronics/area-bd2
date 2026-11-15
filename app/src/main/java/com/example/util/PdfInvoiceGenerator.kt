@@ -241,8 +241,9 @@ object PdfInvoiceGenerator {
 
         val policyStartY = 514f
         val policyLineHeight = 14f
-        // End the yellow box immediately after the final wrapped line of warranty item 3.
-        val policyBoxBottom = policyStartY + (policyLines.size - 1).coerceAtLeast(0) * policyLineHeight + 4f
+        // Match the bottom inner padding to the visible top padding above the warranty heading.
+        val policyBottomPadding = paint.fontMetrics.descent + 11f
+        val policyBoxBottom = policyStartY + (policyLines.size - 1).coerceAtLeast(0) * policyLineHeight + policyBottomPadding
 
         paint.style = Paint.Style.FILL
         paint.color = Color.parseColor("#FEFCE8")
