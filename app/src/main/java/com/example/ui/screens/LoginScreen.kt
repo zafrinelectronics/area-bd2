@@ -75,7 +75,7 @@ fun LoginScreen(
     var username by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var isPasswordVisible by remember { mutableStateOf(false) }
-    var pairingCode by remember { mutableStateOf("") }
+    var pairingCode by remember { mutableStateOf("") }\n    var showNewShopConfirm by remember { mutableStateOf(false) }
     val loginError by viewModel.loginError.collectAsStateWithLifecycle()
     val cloudAuthMessage by viewModel.cloudAuthMessage.collectAsStateWithLifecycle()
     val isCloudAuthBusy by viewModel.isCloudAuthBusy.collectAsStateWithLifecycle()
@@ -257,7 +257,34 @@ fun LoginScreen(
                         )
                     }
 
+                    OutlinedButton(
+                        onClick = { showNewShopConfirm = true },
+                        enabled = !isCloudAuthBusy && username.isNotBlank() && password.isNotBlank(),
+                        modifier = Modifier.fillMaxWidth().testTag("create_new_shop_from_login")
+                    ) {
+                        Icon(imageVector = Icons.Default.CloudSync, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(if (isCloudAuthBusy) "Please wait..." else "Owner সমস্যা ঠিক করুন / নতুন Shop")
+                    }
+
                 }
+            }
+
+            if (showNewShopConfirm) {
+                AlertDialog(
+                    onDismissRequest = { showNewShopConfirm = false },
+                    title = { Text("নতুন Shop তৈরি করবেন?") },
+                    text = { Text("আপনার Admin ইউজারনেম ও পাসওয়ার্ড যাচাই করে এই ফোনে নতুন Owner পরিচয় তৈরি হবে। পুরোনো Firebase ডাটা মুছবে না এবং ফোনের স্থানীয় পণ্য/বিক্রয় ডাটা অক্ষত থাকবে।") },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            showNewShopConfirm = false
+                            viewModel.createNewCloudShop(username, password)
+                        }) { Text("হ্যাঁ, তৈরি করুন") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showNewShopConfirm = false }) { Text("বাতিল") }
+                    }
+                )
             }
 
             // Pair a freshly installed device before staff login.
