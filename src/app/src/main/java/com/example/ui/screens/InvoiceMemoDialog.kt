@@ -386,11 +386,11 @@ ${shopSettings.shopName} • ${shopSettings.shopPhone}
                         // Warranty Policy Box (Light yellow box as requested)
                         Box(
                             modifier = Modifier
-                                .fillMaxWidth()
+                                .fillMaxWidth(0.94f)
                                 .clip(RoundedCornerShape(10.dp))
                                 .background(Color(0xFFFEFCE8))
                                 .border(1.dp, Color(0xFFFEF08A), RoundedCornerShape(10.dp))
-                                .padding(12.dp)
+                                .padding(8.dp)
                         ) {
                             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Row(
