@@ -201,10 +201,13 @@ object PdfInvoiceGenerator {
         paint.textAlign = Paint.Align.LEFT
         canvas.drawText("পেমেন্ট মেথড: ${sale.paymentMethod}", 40f, 384f, paint)
 
-        // Warranty Policy Box (ONLY box retained as requested - with yellow/amber background)
+        // Warranty Policy Box and its text scaled down together by 15%
+        canvas.save()
+        canvas.scale(0.85f, 0.85f, PAGE_WIDTH / 2f, 474f)
+
         paint.style = Paint.Style.FILL
         paint.color = Color.parseColor("#FEFCE8")
-        canvas.drawRoundRect(52f, 404f, (PAGE_WIDTH - 52).toFloat(), 532f, 10f, 10f, paint)
+        canvas.drawRoundRect(40f, 404f, (PAGE_WIDTH - 40).toFloat(), 544f, 10f, 10f, paint)
 
         paint.style = Paint.Style.STROKE
         paint.color = Color.parseColor("#FEF08A")
@@ -229,6 +232,7 @@ object PdfInvoiceGenerator {
             paint.color = Color.parseColor("#78350F")
             canvas.drawText("বিশেষ নোট: ${sale.remarks}", 64f, 512f, paint)
         }
+        canvas.restore()
 
         // Bottom Disclaimers & Signatures
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
