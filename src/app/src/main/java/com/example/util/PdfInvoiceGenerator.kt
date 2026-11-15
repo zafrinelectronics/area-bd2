@@ -204,7 +204,7 @@ object PdfInvoiceGenerator {
         // Warranty Policy Box (ONLY box retained as requested - with yellow/amber background)
         paint.style = Paint.Style.FILL
         paint.color = Color.parseColor("#FEFCE8")
-        canvas.drawRoundRect(40f, 404f, (PAGE_WIDTH - 40).toFloat(), 544f, 10f, 10f, paint)
+        canvas.drawRoundRect(52f, 404f, (PAGE_WIDTH - 52).toFloat(), 532f, 10f, 10f, paint)
 
         paint.style = Paint.Style.STROKE
         paint.color = Color.parseColor("#FEF08A")
@@ -215,19 +215,19 @@ object PdfInvoiceGenerator {
         paint.color = Color.parseColor("#A16207")
         paint.textSize = 10.5f
         paint.textAlign = Paint.Align.LEFT
-        canvas.drawText("ওয়ারেন্টি ও গ্যারান্টি নীতিমালা / Warranty Policy", 54f, 424f, paint)
+        canvas.drawText("ওয়ারেন্টি ও গ্যারান্টি নীতিমালা / Warranty Policy", 64f, 424f, paint)
 
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.color = Color.parseColor("#451A03")
         paint.textSize = 9.5f
-        canvas.drawText("1. ${shopSettings.warrantyReplacement}", 54f, 446f, paint)
-        canvas.drawText("2. ${shopSettings.warrantyService}", 54f, 467f, paint)
-        canvas.drawText("3. ${shopSettings.warrantyExchangeDeduction}", 54f, 488f, paint)
+        canvas.drawText("1. ${shopSettings.warrantyReplacement}", 64f, 446f, paint)
+        canvas.drawText("2. ${shopSettings.warrantyService}", 64f, 467f, paint)
+        canvas.drawText("3. ${shopSettings.warrantyExchangeDeduction}", 64f, 488f, paint)
 
         if (sale.remarks.isNotBlank()) {
             paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC)
             paint.color = Color.parseColor("#78350F")
-            canvas.drawText("বিশেষ নোট: ${sale.remarks}", 54f, 512f, paint)
+            canvas.drawText("বিশেষ নোট: ${sale.remarks}", 64f, 512f, paint)
         }
 
         // Bottom Disclaimers & Signatures
