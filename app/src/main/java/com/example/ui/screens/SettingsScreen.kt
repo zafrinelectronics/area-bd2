@@ -116,10 +116,39 @@ fun SettingsScreen(
     onCreateShopPairingCode: () -> Unit = {},
     onJoinShopWithPairingCode: (String) -> Unit = {},
     onCloudSignIn: (String, String) -> Unit = { _, _ -> },
-    onCloudSignOut: () -> Unit = {}
+    onCloudSignOut: () -> Unit = {},
+    onCreateNewCloudShop: () -> Unit = {}
 ) {
     val strings = LocalAppStrings.current
     val isEnglish = strings.tabDashboard == "Dashboard"
+    var showNewCloudShopConfirmation by remember { mutableStateOf(false) }
+
+    if (showNewCloudShopConfirmation) {
+        AlertDialog(
+            onDismissRequest = { if (!isCloudAuthBusy) showNewCloudShopConfirmation = false },
+            title = { Text("নতুন Shop তৈরি করবেন?") },
+            text = {
+                Text(
+                    "এই ফোনের Firebase পরিচয় নতুন করে তৈরি হবে এবং এই ফোন নতুন Shop-এর Owner হবে। পুরোনো Firebase Shop-এর ডাটা মুছবে না, তবে নতুন Shop-এর সঙ্গে আর যুক্ত থাকবে না। এই ফোনের পণ্য, বিক্রয় ও Admin লগইন অক্ষত থাকবে।"
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showNewCloudShopConfirmation = false
+                        onCreateNewCloudShop()
+                    },
+                    enabled = !isCloudAuthBusy
+                ) { Text("নতুন Shop তৈরি করুন") }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showNewCloudShopConfirmation = false },
+                    enabled = !isCloudAuthBusy
+                ) { Text("বাতিল") }
+            }
+        )
+    }
 
     // Text scale state (default 0.85f for small/compact interface as requested)
 
@@ -611,6 +640,34 @@ fun SettingsScreen(
                 onSignOut = onCloudSignOut,
                 isAdmin = currentUser?.isAdmin == true
             )
+        }
+
+        if (currentUser?.isAdmin == true) {
+            item {
+                ElevatedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text("নতুন Cloud Shop", fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                        Text(
+                            "Owner পরিচয় সমস্যা হলে এই ফোনকে নতুন Shop-এর Owner হিসেবে সেট করুন।",
+                            fontSize = 12.sp,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Button(
+                            onClick = { showNewCloudShopConfirmation = true },
+                            enabled = !isCloudAuthBusy,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(if (isCloudAuthBusy) "অপেক্ষা করুন..." else "নতুন Shop তৈরি করুন")
+                        }
+                    }
+                }
+            }
         }
 
         // SHOP DETAILS SECTION:
