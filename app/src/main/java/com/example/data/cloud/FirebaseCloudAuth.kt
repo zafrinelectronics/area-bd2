@@ -23,6 +23,13 @@ class FirebaseCloudAuth(
         if (auth.currentUser == null) auth.signInAnonymously().await()
     }
 
+    suspend fun startFreshAnonymousSession(): String {
+        auth.signOut()
+        val user = auth.signInAnonymously().await().user
+            ?: throw IllegalStateException("Could not create a new Firebase device identity.")
+        return user.uid
+    }
+
     suspend fun signIn(email: String, password: String) {
         require(email.isNotBlank()) { "Enter the Firebase account email." }
         require(password.isNotBlank()) { "Enter the Firebase account password." }
