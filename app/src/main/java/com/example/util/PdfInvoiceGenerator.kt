@@ -129,12 +129,12 @@ object PdfInvoiceGenerator {
         paint.textAlign = Paint.Align.LEFT
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.color = Color.parseColor("#0284C7")
-        paint.textSize = 18f
+        paint.textSize = 14f
         canvas.drawText("ক্রেতার তথ্য / Customer Info", 56f, 176f, paint)
 
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.color = Color.parseColor("#1E293B")
-        paint.textSize = 18f
+        paint.textSize = 14f
         canvas.drawText("নাম: ${sale.customerName}", 56f, 202f, paint)
         canvas.drawText("মোবাইল: ${sale.customerPhone}", 56f, 226f, paint)
         if (sale.customerAddress.isNotBlank()) {
@@ -152,17 +152,17 @@ object PdfInvoiceGenerator {
         // Product Details Section (No tinted box behind - clean white background)
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.color = Color.parseColor("#0284C7")
-        paint.textSize = 18f
+        paint.textSize = 14f
         canvas.drawText("পণ্যের বিবরণ / Device Details", 56f, 264f, paint)
 
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.color = Color.parseColor("#0F172A")
-        paint.textSize = 18f
+        paint.textSize = 14f
         canvas.drawText(sale.productDetails, 56f, 288f, paint)
 
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.color = Color.parseColor("#334155")
-        paint.textSize = 18f
+        paint.textSize = 14f
         canvas.drawText("ডিভাইস (IMEI): ${sale.imei}", 56f, 312f, paint)
 
         val extraSpecs = StringBuilder()
@@ -177,7 +177,7 @@ object PdfInvoiceGenerator {
         canvas.drawLine(56f, 352f, (PAGE_WIDTH - 56).toFloat(), 352f, paint)
 
         // Pricing & Payment Details (No tinted box behind - clean white background)
-        paint.textSize = 18f
+        paint.textSize = 14f
 
         // Row 1: Sale Price
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
@@ -234,15 +234,15 @@ object PdfInvoiceGenerator {
         }
 
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        paint.textSize = 15f
+        paint.textSize = 11f
         addWrappedPolicy(1, shopSettings.warrantyReplacement)
         addWrappedPolicy(2, shopSettings.warrantyService)
         addWrappedPolicy(3, shopSettings.warrantyExchangeDeduction)
 
         val policyStartY = 514f
-        val policyLineHeight = 18f
-        val noteHeight = if (sale.remarks.isNotBlank()) 18f else 0f
-        val policyBoxBottom = maxOf(644f, policyStartY + policyLines.size * policyLineHeight + noteHeight + 10f)
+        val policyLineHeight = 14f
+        // End the yellow box immediately after the final wrapped line of warranty item 3.
+        val policyBoxBottom = policyStartY + (policyLines.size - 1).coerceAtLeast(0) * policyLineHeight + 4f
 
         paint.style = Paint.Style.FILL
         paint.color = Color.parseColor("#FEFCE8")
@@ -255,28 +255,30 @@ object PdfInvoiceGenerator {
         paint.style = Paint.Style.FILL
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.color = Color.parseColor("#A16207")
-        paint.textSize = 15f
+        paint.textSize = 11f
         paint.textAlign = Paint.Align.LEFT
         canvas.drawText("ওয়ারেন্টি ও গ্যারান্টি নীতিমালা / Warranty Policy", 54f, 491f, paint)
 
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
         paint.color = Color.parseColor("#451A03")
-        paint.textSize = 15f
+        paint.textSize = 11f
         var policyY = policyStartY
         policyLines.forEach { line ->
             canvas.drawText(line, policyLeft, policyY, paint)
             policyY += policyLineHeight
         }
 
+        // Keep special notes outside the yellow warranty box so the box ends at item 3.
+        val noteY = policyBoxBottom + 16f
         if (sale.remarks.isNotBlank()) {
             paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.ITALIC)
             paint.color = Color.parseColor("#78350F")
             paint.textSize = 11f
-            canvas.drawText("বিশেষ নোট: ${sale.remarks}", 54f, policyY + 1f, paint)
+            canvas.drawText("বিশেষ নোট: ${sale.remarks}", 40f, noteY, paint)
         }
 
         // Bottom Disclaimers & Signatures
-        val disclaimerY = policyBoxBottom + 20f
+        val disclaimerY = if (sale.remarks.isNotBlank()) noteY + 18f else policyBoxBottom + 20f
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.NORMAL)
         paint.color = Color.parseColor("#64748B")
         paint.textSize = 8.5f
