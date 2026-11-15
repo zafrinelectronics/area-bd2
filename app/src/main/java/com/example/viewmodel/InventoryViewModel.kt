@@ -1777,6 +1777,47 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    fun createNewCloudShop() {
+        val current = _currentUser.value
+        if (current?.isAdmin != true) {
+            _cloudAuthMessage.value = "শুধুমাত্র Admin নতুন Shop তৈরি করতে পারবেন।"
+            return
+        }
+        viewModelScope.launch(Dispatchers.IO) {
+            _isCloudAuthBusy.value = true
+            _cloudAuthMessage.value = null
+            try {
+                // Stop listening to the previous shop before changing Firebase identity.
+                cloudListener?.remove()
+                cloudListener = null
+                cloudPullJob?.cancel()
+                cloudPullJob = null
+                staffProfileListener?.remove()
+                staffProfileListener = null
+                firebaseStaffAuth.signOut()
+
+                val newUid = firebaseCloudAuth.startFreshAnonymousSession()
+                firebaseCloudSync.ensureOwnerShop(newUid)
+                check(firebaseCloudSync.getMemberRole(newUid, newUid) == "owner") {
+                    "নতুন Shop-এর Owner পরিচয় নিশ্চিত করা যায়নি।"
+                }
+
+                cloudPrefs.edit().putString("active_shop_uid", newUid).apply()
+                _activeShopUid.value = newUid
+                _cloudAccountEmail.value = "Automatic cloud sync"
+                _shopPairingCode.value = null
+                attachCloudListener(newUid)
+                triggerAutoCloudBackup()
+                _cloudAuthMessage.value = "নতুন Shop তৈরি হয়েছে। এই ফোন এখন Owner। আপনার ফোনের স্থানীয় পণ্য, বিক্রয় ও Admin লগইন অক্ষত আছে।"
+            } catch (error: Exception) {
+                _cloudAuthMessage.value = error.localizedMessage
+                    ?: "নতুন Shop তৈরি করা যায়নি। Firebase সংযোগ পরীক্ষা করুন।"
+            } finally {
+                _isCloudAuthBusy.value = false
+            }
+        }
+    }
+
     fun signOutFromFirebaseCloud() {
         firebaseCloudAuth.signOut()
         _cloudAccountEmail.value = null
