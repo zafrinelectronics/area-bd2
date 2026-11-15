@@ -121,7 +121,7 @@ object PdfInvoiceGenerator {
         paint.style = Paint.Style.STROKE
         paint.strokeWidth = 1f
         paint.color = Color.parseColor("#BFDBFE")
-        canvas.drawRoundRect(40f, 154f, (PAGE_WIDTH - 40).toFloat(), 394f, 10f, 10f, paint)
+        canvas.drawRoundRect(40f, 154f, (PAGE_WIDTH - 40).toFloat(), 460f, 10f, 10f, paint)
 
         paint.style = Paint.Style.FILL
         // Customer Details
@@ -234,7 +234,7 @@ object PdfInvoiceGenerator {
         }
 
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-        paint.textSize = 20f
+        paint.textSize = 15f
         addWrappedPolicy(1, shopSettings.warrantyReplacement)
         addWrappedPolicy(2, shopSettings.warrantyService)
         addWrappedPolicy(3, shopSettings.warrantyExchangeDeduction)
@@ -250,7 +250,7 @@ object PdfInvoiceGenerator {
 
         paint.style = Paint.Style.STROKE
         paint.color = Color.parseColor("#FEF08A")
-        canvas.drawRoundRect(40f, 404f, (PAGE_WIDTH - 40).toFloat(), policyBoxBottom, 10f, 10f, paint)
+        canvas.drawRoundRect(40f, 470f, (PAGE_WIDTH - 40).toFloat(), policyBoxBottom, 10f, 10f, paint)
 
         paint.style = Paint.Style.FILL
         paint.typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
