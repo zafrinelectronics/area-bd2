@@ -152,7 +152,7 @@ fun SettingsScreen(
 
     // Text scale state (default 0.85f for small/compact interface as requested)
 
-    // Preset options management state (Company, Color, Supplier, Variant, Battery, Box, Payment)
+    // Preset options management state (Company, Model, Color, Supplier, Variant, Battery, Box, Payment)
     var selectedPresetTab by remember { mutableStateOf("company") }
     var showAddPresetDialog by remember { mutableStateOf(false) }
     var newPresetText by remember { mutableStateOf("") }
@@ -195,6 +195,7 @@ fun SettingsScreen(
     if (showAddPresetDialog) {
         val catName = when (selectedPresetTab) {
             "company" -> if (isEnglish) "Company Brand" else "কোম্পানির নাম (Company)"
+            "model" -> if (isEnglish) "Model Name" else "মডেলের নাম (Model)"
             "color" -> if (isEnglish) "Device Color" else "কালার (Color)"
             "supplier" -> if (isEnglish) "Supplier / Source" else "সাপ্লায়ার (Supplier)"
             "variant" -> if (isEnglish) "Storage Variant" else "ভ্যারিয়েন্ট (Storage)"
@@ -242,6 +243,9 @@ fun SettingsScreen(
                                 "company" -> if (!currentSettings.companyPresets.contains(trimmed)) {
                                     onSaveSettings(currentSettings.copy(companyPresets = currentSettings.companyPresets + trimmed))
                                 }
+                                "model" -> if (!currentSettings.modelPresets.contains(trimmed)) {
+                                    onSaveSettings(currentSettings.copy(modelPresets = currentSettings.modelPresets + trimmed))
+                                }
                                 "color" -> if (!currentSettings.colorPresets.contains(trimmed)) {
                                     onSaveSettings(currentSettings.copy(colorPresets = currentSettings.colorPresets + trimmed))
                                 }
@@ -285,6 +289,7 @@ fun SettingsScreen(
     editingPresetIndex?.let { index ->
         val catName = when (selectedPresetTab) {
             "company" -> if (isEnglish) "Company Brand" else "কোম্পানির নাম"
+            "model" -> if (isEnglish) "Model Name" else "মডেলের নাম"
             "color" -> if (isEnglish) "Device Color" else "কালার"
             "supplier" -> if (isEnglish) "Supplier / Source" else "সাপ্লায়ার"
             "variant" -> if (isEnglish) "Storage Variant" else "ভ্যারিয়েন্ট"
@@ -328,6 +333,10 @@ fun SettingsScreen(
                                 "company" -> if (index in currentSettings.companyPresets.indices) {
                                     val updated = currentSettings.companyPresets.toMutableList().also { it[index] = trimmed }
                                     onSaveSettings(currentSettings.copy(companyPresets = updated))
+                                }
+                                "model" -> if (index in currentSettings.modelPresets.indices) {
+                                    val updated = currentSettings.modelPresets.toMutableList().also { it[index] = trimmed }
+                                    onSaveSettings(currentSettings.copy(modelPresets = updated))
                                 }
                                 "color" -> if (index in currentSettings.colorPresets.indices) {
                                     val updated = currentSettings.colorPresets.toMutableList().also { it[index] = trimmed }
@@ -375,6 +384,7 @@ fun SettingsScreen(
     presetToDelete?.let { (index, name) ->
         val catName = when (selectedPresetTab) {
             "company" -> if (isEnglish) "Company" else "কোম্পানি"
+            "model" -> if (isEnglish) "Model" else "মডেল"
             "color" -> if (isEnglish) "Color" else "কালার"
             "supplier" -> if (isEnglish) "Supplier" else "সাপ্লায়ার"
             "variant" -> if (isEnglish) "Variant" else "ভ্যারিয়েন্ট"
@@ -405,6 +415,10 @@ fun SettingsScreen(
                             "company" -> if (index in currentSettings.companyPresets.indices) {
                                 val updated = currentSettings.companyPresets.toMutableList().also { it.removeAt(index) }
                                 onSaveSettings(currentSettings.copy(companyPresets = updated))
+                            }
+                            "model" -> if (index in currentSettings.modelPresets.indices) {
+                                val updated = currentSettings.modelPresets.toMutableList().also { it.removeAt(index) }
+                                onSaveSettings(currentSettings.copy(modelPresets = updated))
                             }
                             "color" -> if (index in currentSettings.colorPresets.indices) {
                                 val updated = currentSettings.colorPresets.toMutableList().also { it.removeAt(index) }
@@ -450,6 +464,7 @@ fun SettingsScreen(
     if (showResetCategoryDialog) {
         val catName = when (selectedPresetTab) {
             "company" -> if (isEnglish) "Companies" else "কোম্পানি"
+            "model" -> if (isEnglish) "Models" else "মডেল"
             "color" -> if (isEnglish) "Colors" else "কালার"
             "supplier" -> if (isEnglish) "Suppliers" else "সাপ্লায়ার"
             "variant" -> if (isEnglish) "Storage Variants" else "ভ্যারিয়েন্ট"
@@ -478,6 +493,7 @@ fun SettingsScreen(
                     onClick = {
                         when (selectedPresetTab) {
                             "company" -> onSaveSettings(currentSettings.copy(companyPresets = listOf("Apple", "Samsung", "Google", "Xiaomi", "OnePlus", "Vivo", "Oppo", "Realme")))
+                            "model" -> onSaveSettings(currentSettings.copy(modelPresets = emptyList()))
                             "color" -> onSaveSettings(currentSettings.copy(colorPresets = listOf("Natural Titanium", "Desert Titanium", "Black Titanium", "White Titanium", "Deep Purple", "Midnight", "Starlight", "Blue", "Space Gray")))
                             "supplier" -> onSaveSettings(currentSettings.copy(supplierPresets = listOf("Dubai Stock", "USA LL/A", "Singapore ZP/A", "Japan J/A", "Local Dealer", "Customer Exchange")))
                             "variant" -> onSaveSettings(currentSettings.copy(variantPresets = listOf("64GB", "128GB", "256GB", "512GB", "1TB")))
@@ -1576,6 +1592,7 @@ fun SettingsScreen(
                     ) {
                         val categories = listOf(
                             Triple("company", "🏢 Company", "Company"),
+                            Triple("model", "📱 Model", "Model"),
                             Triple("color", "🎨 Color", "Color"),
                             Triple("supplier", "🚚 Supplier", "Supplier"),
                             Triple("variant", "💾 Variant", "Variant"),
@@ -1588,6 +1605,7 @@ fun SettingsScreen(
                             val isSelected = selectedPresetTab == catId
                             val count = when (catId) {
                                 "company" -> currentSettings.companyPresets.size
+                                "model" -> currentSettings.modelPresets.size
                                 "color" -> currentSettings.colorPresets.size
                                 "supplier" -> currentSettings.supplierPresets.size
                                 "variant" -> currentSettings.variantPresets.size
@@ -1619,6 +1637,7 @@ fun SettingsScreen(
                     // Active Category Details & List
                     val activeList = when (selectedPresetTab) {
                         "company" -> currentSettings.companyPresets
+                        "model" -> currentSettings.modelPresets
                         "color" -> currentSettings.colorPresets
                         "supplier" -> currentSettings.supplierPresets
                         "variant" -> currentSettings.variantPresets
@@ -1630,6 +1649,7 @@ fun SettingsScreen(
 
                     val catTitle = when (selectedPresetTab) {
                         "company" -> if (isEnglish) "Company Brand List" else "কোম্পানির তালিকা (Company)"
+                        "model" -> if (isEnglish) "Model Names List" else "মডেলের নামের তালিকা (Model)"
                         "color" -> if (isEnglish) "Color Options List" else "কালার তালিকা (Color)"
                         "supplier" -> if (isEnglish) "Suppliers & Sources" else "সাপ্লায়ার বা লট কেনার সোর্স (Supplier)"
                         "variant" -> if (isEnglish) "Storage Variants (RAM/ROM)" else "স্টোরেজ ভ্যারিয়েন্ট (Variant)"
