@@ -273,6 +273,8 @@ fun MainAppContent(viewModel: InventoryViewModel) {
     var showGitHubSyncDialog by remember { mutableStateOf(false) }
     var isStockMenuExpanded by remember { mutableStateOf(false) }
     var selectedStockGroup by remember { mutableStateOf("Model") }
+    var expandedStockSubmenu by remember { mutableStateOf<String?>(null) }
+    var selectedStockGroupValue by remember { mutableStateOf<String?>(null) }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val drawerScope = rememberCoroutineScope()
 
@@ -522,23 +524,56 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                                     modifier = Modifier.padding(vertical = 2.dp)
                                 )
                                 if (isStockMenuExpanded) {
-                                    listOf(
-                                        "New" to "New",
-                                        "Used" to "Used",
-                                        "Model" to "Model",
-                                        "Supplier" to "Supplier",
-                                        "Company" to "Company"
-                                    ).forEach { (label, group) ->
+                                    listOf("New", "Used", "Model", "Supplier", "Company").forEach { group ->
+                                        val isExpandable = group in listOf("Model", "Supplier", "Company")
                                         NavigationDrawerItem(
-                                            label = { Text(label, fontSize = 13.sp) },
-                                            selected = currentTab == AppTab.STOCK && selectedStockGroup == group,
+                                            label = {
+                                                androidx.compose.foundation.layout.Row(
+                                                    modifier = Modifier.fillMaxWidth(),
+                                                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween
+                                                ) {
+                                                    Text(group, fontSize = 13.sp)
+                                                    if (isExpandable) Text(if (expandedStockSubmenu == group) "⌃" else "⌄")
+                                                }
+                                            },
+                                            selected = currentTab == AppTab.STOCK && selectedStockGroup == group && selectedStockGroupValue == null,
                                             onClick = {
                                                 selectedStockGroup = group
-                                                viewModel.setTab(AppTab.STOCK)
-                                                drawerScope.launch { drawerState.close() }
+                                                selectedStockGroupValue = null
+                                                if (isExpandable) {
+                                                    expandedStockSubmenu = if (expandedStockSubmenu == group) null else group
+                                                } else {
+                                                    expandedStockSubmenu = null
+                                                    viewModel.setTab(AppTab.STOCK)
+                                                    drawerScope.launch { drawerState.close() }
+                                                }
                                             },
                                             modifier = Modifier.padding(start = 24.dp, top = 1.dp, bottom = 1.dp)
                                         )
+                                        if (isExpandable && expandedStockSubmenu == group) {
+                                            val names = when (group) {
+                                                "Model" -> allProducts.map { it.model.trim() }.filter { it.isNotBlank() }.distinct().sortedBy { it.lowercase() }
+                                                "Supplier" -> allProducts.map { it.supplier.trim() }.filter { it.isNotBlank() }.distinct().sortedBy { it.lowercase() }
+                                                else -> allProducts.map { it.company.trim() }.filter { it.isNotBlank() }.distinct().sortedBy { it.lowercase() }
+                                            }
+                                            if (names.isEmpty()) {
+                                                Text("কোনো নাম পাওয়া যায়নি", fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 52.dp, top = 4.dp, bottom = 8.dp))
+                                            } else {
+                                                names.forEach { name ->
+                                                    NavigationDrawerItem(
+                                                        label = { Text(name, fontSize = 12.sp, maxLines = 1) },
+                                                        selected = currentTab == AppTab.STOCK && selectedStockGroup == group && selectedStockGroupValue == name,
+                                                        onClick = {
+                                                            selectedStockGroup = group
+                                                            selectedStockGroupValue = name
+                                                            viewModel.setTab(AppTab.STOCK)
+                                                            drawerScope.launch { drawerState.close() }
+                                                        },
+                                                        modifier = Modifier.padding(start = 44.dp, top = 0.dp, bottom = 0.dp)
+                                                    )
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -645,7 +680,8 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                         onRestoreProduct = { viewModel.restoreReturnedProductToStock(it) },
                         selectedStatusFilter = selectedStatusFilter,
                         onStatusFilterChange = { viewModel.setStatusFilter(it) },
-                        selectedStockGroup = selectedStockGroup
+                        selectedStockGroup = selectedStockGroup,
+                        selectedStockGroupValue = selectedStockGroupValue
                     )
                     AppTab.EXPENSES -> ExpenseScreen(
                         expenses = filteredExpenses,
