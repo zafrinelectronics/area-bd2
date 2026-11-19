@@ -26,6 +26,7 @@ data class ShopSettings(
     val showReportsTab: Boolean = true,
     val showSettingsTab: Boolean = true,
     val companyPresets: List<String> = listOf("Apple", "Samsung", "Google", "Xiaomi", "OnePlus", "Vivo", "Oppo", "Realme"),
+    val modelPresets: List<String> = emptyList(),
     val variantPresets: List<String> = listOf("64GB", "128GB", "256GB", "512GB", "1TB"),
     val colorPresets: List<String> = listOf("Natural Titanium", "Desert Titanium", "Black Titanium", "White Titanium", "Deep Purple", "Midnight", "Starlight", "Blue", "Space Gray"),
     val batteryPresets: List<String> = listOf("100% (Brand New)", "98%", "95%", "92%", "89%", "85%"),
