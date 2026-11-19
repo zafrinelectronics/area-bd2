@@ -554,7 +554,7 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                                         )
                                         if (isExpandable && expandedStockSubmenu == group) {
                                             val names = when (group) {
-                                                "Model" -> allProducts.map { it.model.trim() }.filter { it.isNotBlank() }.distinct().sortedBy { it.lowercase() }
+                                                "Model" -> allProducts.filter { it.status == ProductStatus.IN_STOCK.name }.map { it.model.trim() }.filter { it.isNotBlank() }.distinct().sortedBy { it.lowercase() }
                                                 "Supplier" -> allProducts.map { it.supplier.trim() }.filter { it.isNotBlank() }.distinct().sortedBy { it.lowercase() }
                                                 else -> allProducts.map { it.company.trim() }.filter { it.isNotBlank() }.distinct().sortedBy { it.lowercase() }
                                             }
