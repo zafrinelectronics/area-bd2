@@ -44,6 +44,7 @@ class InventoryRepository(
     suspend fun deleteProduct(product: Product) = productDao.deleteProduct(product)
     suspend fun getProductById(id: Long): Product? = productDao.getProductById(id)
     suspend fun getProductByImei(imei: String): Product? = productDao.getProductByImei(imei)
+    suspend fun getInStockProductByImei(imei: String): Product? = productDao.getInStockProductByImei(imei)
 
     /**
      * Returns a product from stock with reason and records refund from supplier if any.
