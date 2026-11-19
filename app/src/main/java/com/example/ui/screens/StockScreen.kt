@@ -36,8 +36,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -48,6 +46,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -86,15 +85,17 @@ fun StockScreen(
     onReturnProduct: (Product) -> Unit = {},
     onRestoreProduct: (Product) -> Unit = {},
     selectedStatusFilter: String = "IN_STOCK",
-    onStatusFilterChange: (String) -> Unit = {}
+    onStatusFilterChange: (String) -> Unit = {},
+    selectedStockGroup: String = "Model"
 ) {
     val strings = com.example.ui.LocalAppStrings.current
     val isEnglish = strings.tabDashboard == "Dashboard"
     val lang = if (isEnglish) "EN" else "BN"
 
     val brands = listOf("ALL", "Apple", "Samsung", "Google", "Xiaomi", "OnePlus")
-    var groupBy by remember { mutableStateOf("Model") }
+    val groupBy = selectedStockGroup
     var selectedGroupValue by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(selectedStockGroup) { selectedGroupValue = null }
     val displayedProducts = remember(products, groupBy, selectedGroupValue) {
         val typeFiltered = when (groupBy) {
             "New" -> products.filter { it.productType.equals("New", ignoreCase = true) || it.productType.isBlank() }
@@ -325,42 +326,6 @@ fun StockScreen(
                                 selectedLabelColor = Color.White
                             )
                         )
-                    }
-                }
-            }
-
-            // Stock grouping options
-            item {
-                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Text(
-                        text = if (isEnglish) "Group by" else "গ্রুপ অনুযায়ী সাজান",
-                        fontSize = 12.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        items(listOf("New", "Used", "Model", "Supplier", "Company")) { option ->
-                            val selected = groupBy == option
-                            FilterChip(
-                                selected = selected,
-                                onClick = { groupBy = option; selectedGroupValue = null },
-                                label = {
-                                    Text(
-                                        when (option) {
-                                            "New" -> "New"
-                                            "Used" -> "Used"
-                                            "Model" -> if (isEnglish) "Model" else "মডেল"
-                                            "Supplier" -> if (isEnglish) "Supplier" else "সাপ্লায়ার"
-                                            else -> if (isEnglish) "Company" else "কোম্পানি"
-                                        },
-                                        fontSize = 11.sp
-                                    )
-                                },
-                                colors = FilterChipDefaults.filterChipColors(
-                                    selectedContainerColor = AppleBlue,
-                                    selectedLabelColor = Color.White
-                                )
-                            )
-                        }
                     }
                 }
             }
