@@ -162,14 +162,14 @@ fun AddEditProductScreen(
                 if (idx != null) {
                     val updated = batchImeis.toMutableList()
                     if (idx < updated.size) {
-                        updated[idx] = scannedImei
+                        updated[idx] = scannedImei.filter { it.isDigit() }.take(15)
                     } else {
                         updated.add(scannedImei)
                     }
                     batchImeis = updated
                     scanningIndex = null
                 } else {
-                    imei = scannedImei
+                    imei = scannedImei.filter { it.isDigit() }.take(15)
                 }
                 isScannerOpen = false
             }
@@ -212,8 +212,8 @@ fun AddEditProductScreen(
                     onClick = {
                         val parsed = bulkPasteText
                             .split("\n", ",", " ", "\t")
-                            .map { it.trim() }
-                            .filter { it.length >= 8 }
+                            .map { it.trim().filter { ch -> ch.isDigit() }.take(15) }
+                            .filter { it.isNotBlank() }
                         if (parsed.isNotEmpty()) {
                             batchImeis = parsed
                         }
@@ -943,7 +943,7 @@ fun AddEditProductScreen(
                         ) {
                             OutlinedTextField(
                                 value = imei,
-                                onValueChange = { imei = it },
+                                onValueChange = { imei = it.filter { ch -> ch.isDigit() }.take(15) },
                                 placeholder = { Text(if (isEnglish) "Enter or scan 15-digit IMEI" else "15 ডিজিট আইএমইআই লিখুন বা স্ক্যান করুন") },
                                 modifier = Modifier
                                     .weight(1f)
@@ -1074,7 +1074,7 @@ fun AddEditProductScreen(
                                     value = currentImei,
                                     onValueChange = { newVal ->
                                         val updated = batchImeis.toMutableList()
-                                        updated[index] = newVal
+                                        updated[index] = newVal.filter { ch -> ch.isDigit() }.take(15)
                                         batchImeis = updated
                                     },
                                     placeholder = {
@@ -1274,6 +1274,10 @@ fun AddEditProductScreen(
                         }
 
                         if (!isBatchMode) {
+                            if (imei.isNotBlank() && (imei.length != 15 || !imei.all { it.isDigit() })) {
+                                validationError = if (isEnglish) "IMEI must contain exactly 15 digits." else "IMEI অবশ্যই ঠিক ১৫ ডিজিটের হতে হবে।"
+                                return@Button
+                            }
                             // Single item save: if IMEI is blank, auto-generate a valid 15-digit serial
                             val finalImei = imei.trim().ifBlank {
                                 "35" + (1000000000000L..9999999999999L).random().toString()
@@ -1295,6 +1299,10 @@ fun AddEditProductScreen(
                             )
                         } else {
                             // Batch multiple items save: fill blank IMEIs with auto-generated serials
+                            if (batchImeis.any { it.isNotBlank() && (it.length != 15 || !it.all { ch -> ch.isDigit() }) }) {
+                                validationError = if (isEnglish) "Every IMEI must contain exactly 15 digits." else "প্রতিটি IMEI অবশ্যই ঠিক ১৫ ডিজিটের হতে হবে।"
+                                return@Button
+                            }
                             val validImeis = batchImeis.map {
                                 it.trim().ifBlank { "35" + (1000000000000L..9999999999999L).random().toString() }
                             }.ifEmpty {
