@@ -93,15 +93,23 @@ fun StockScreen(
     val lang = if (isEnglish) "EN" else "BN"
 
     val brands = listOf("ALL", "Apple", "Samsung", "Google", "Xiaomi", "OnePlus")
-    var groupBy by remember { mutableStateOf("Category") }
-    val groupedProducts = remember(products, groupBy) {
-        val groups = products.groupBy { product ->
+    var groupBy by remember { mutableStateOf("Model") }
+    val displayedProducts = remember(products, groupBy) {
+        when (groupBy) {
+            "New" -> products.filter { it.productType.equals("New", ignoreCase = true) || it.productType.isBlank() }
+            "Used" -> products.filter { it.productType.equals("Used", ignoreCase = true) }
+            else -> products
+        }
+    }
+    val groupedProducts = remember(displayedProducts, groupBy) {
+        val groups = displayedProducts.groupBy { product ->
             when (groupBy) {
-                "Category" -> product.productType.ifBlank { "New" }.replaceFirstChar { it.uppercase() }
+                "New" -> "New"
+                "Used" -> "Used"
                 "Model" -> product.model.ifBlank { "Unknown Model" }
                 "Supplier" -> product.supplier.ifBlank { "Unknown Supplier" }
                 "Company" -> product.company.ifBlank { "Unknown Company" }
-                else -> product.productType.ifBlank { "New" }
+                else -> product.model.ifBlank { "Unknown Model" }
             }
         }
         groups.toSortedMap(String.CASE_INSENSITIVE_ORDER).toList()
@@ -316,7 +324,7 @@ fun StockScreen(
                         fontWeight = FontWeight.Bold
                     )
                     LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        items(listOf("Category", "Model", "Supplier", "Company")) { option ->
+                        items(listOf("New", "Used", "Model", "Supplier", "Company")) { option ->
                             val selected = groupBy == option
                             FilterChip(
                                 selected = selected,
@@ -324,7 +332,8 @@ fun StockScreen(
                                 label = {
                                     Text(
                                         when (option) {
-                                            "Category" -> if (isEnglish) "Category (New / Used)" else "ক্যাটাগরি (New / Used)"
+                                            "New" -> "New"
+                                            "Used" -> "Used"
                                             "Model" -> if (isEnglish) "Model" else "মডেল"
                                             "Supplier" -> if (isEnglish) "Supplier" else "সাপ্লায়ার"
                                             else -> if (isEnglish) "Company" else "কোম্পানি"
@@ -393,7 +402,7 @@ fun StockScreen(
             }
 
             // Empty state or Items
-            if (products.isEmpty()) {
+            if (groupedProducts.isEmpty()) {
                 item {
                     Card(
                         modifier = Modifier.fillMaxWidth(),
