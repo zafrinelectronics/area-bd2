@@ -55,6 +55,7 @@ import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.data.model.ProductStatus
 import com.example.ui.EnglishStrings
 import com.example.ui.LocalAppStrings
 import com.example.ui.components.GitHubSyncDialog
