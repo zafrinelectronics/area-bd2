@@ -88,7 +88,8 @@ fun StockScreen(
     onRestoreProduct: (Product) -> Unit = {},
     selectedStatusFilter: String = "IN_STOCK",
     onStatusFilterChange: (String) -> Unit = {},
-    selectedStockGroup: String = "Model"
+    selectedStockGroup: String = "Model",
+    selectedStockGroupValue: String? = null
 ) {
     val strings = com.example.ui.LocalAppStrings.current
     val isEnglish = strings.tabDashboard == "Dashboard"
@@ -96,8 +97,7 @@ fun StockScreen(
 
     val brands = listOf("ALL", "Apple", "Samsung", "Google", "Xiaomi", "OnePlus")
     val groupBy = selectedStockGroup
-    var selectedGroupValue by remember { mutableStateOf<String?>(null) }
-    LaunchedEffect(selectedStockGroup) { selectedGroupValue = null }
+    val selectedGroupValue = selectedStockGroupValue
     val displayedProducts = remember(products, groupBy, selectedGroupValue) {
         val typeFiltered = when (groupBy) {
             "New" -> products.filter { it.productType.equals("New", ignoreCase = true) || it.productType.isBlank() }
@@ -447,7 +447,7 @@ fun StockScreen(
                                 .fillMaxWidth()
                                 .then(
                                     if (selectedGroupValue == null && groupBy in listOf("Model", "Supplier", "Company")) {
-                                        Modifier.clickable { selectedGroupValue = groupName }
+                                        Modifier.clickable { /* choose a group from the side menu */ }
                                     } else Modifier
                                 ),
                             shape = RoundedCornerShape(10.dp),
