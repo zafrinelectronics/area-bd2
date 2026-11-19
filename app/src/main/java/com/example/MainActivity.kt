@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.Badge
@@ -482,7 +484,7 @@ fun MainAppContent(viewModel: InventoryViewModel) {
             drawerState = drawerState,
             drawerContent = {
                 ModalDrawerSheet {
-                    androidx.compose.foundation.layout.Column(modifier = Modifier.padding(12.dp)) {
+                    androidx.compose.foundation.layout.Column(modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp)) {
                         Text("Apple Area Shop", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(16.dp))
                         val menuItems = listOf(
                             "Dashboard" to AppTab.DASHBOARD,
