@@ -32,8 +32,6 @@ interface ProductDao {
     @Query("SELECT * FROM products WHERE imei = :imei AND status = 'IN_STOCK' LIMIT 1")
     suspend fun getInStockProductByImei(imei: String): Product?
 
-    @Query("SELECT * FROM products WHERE imei = :imei AND status = 'IN_STOCK' LIMIT 1")
-    suspend fun getInStockProductByImei(imei: String): Product?
 
     @Query("SELECT COUNT(*) FROM products")
     suspend fun getProductCount(): Int
