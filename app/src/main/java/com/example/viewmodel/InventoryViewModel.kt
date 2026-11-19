@@ -715,6 +715,16 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
     ) {
         viewModelScope.launch {
             val current = _editingProduct.value
+            val cleanImei = imei.trim()
+            if (cleanImei.length != 15 || !cleanImei.all { it.isDigit() }) {
+                _snackbarMessage.value = "IMEI অবশ্যই ঠিক ১৫ ডিজিটের হতে হবে।"
+                return@launch
+            }
+            val duplicateInStock = repository.getInStockProductByImei(cleanImei)
+            if (duplicateInStock != null && duplicateInStock.id != current?.id) {
+                _snackbarMessage.value = "এই IMEI টি ইতিমধ্যে স্টকে আছে: $cleanImei"
+                return@launch
+            }
             if (current != null) {
                 val updated = current.copy(
                     company = company.trim(),
@@ -774,7 +784,23 @@ class InventoryViewModel(application: Application) : AndroidViewModel(applicatio
         productType: String
     ) {
         viewModelScope.launch {
-            val products = imeis.mapIndexed { index, imeiItem ->
+            val cleanImeis = imeis.map { it.trim() }
+            if (cleanImeis.any { it.length != 15 || !it.all(Char::isDigit) }) {
+                _snackbarMessage.value = "প্রতিটি IMEI অবশ্যই ঠিক ১৫ ডিজিটের হতে হবে।"
+                return@launch
+            }
+            val duplicateInBatch = cleanImeis.groupingBy { it }.eachCount().entries.firstOrNull { it.value > 1 }?.key
+            if (duplicateInBatch != null) {
+                _snackbarMessage.value = "একই IMEI একাধিকবার দেওয়া হয়েছে: $duplicateInBatch"
+                return@launch
+            }
+            for (imeiItem in cleanImeis) {
+                if (repository.getInStockProductByImei(imeiItem) != null) {
+                    _snackbarMessage.value = "এই IMEI টি ইতিমধ্যে স্টকে আছে: $imeiItem"
+                    return@launch
+                }
+            }
+            val products = cleanImeis.mapIndexed { index, imeiItem ->
                 Product(
                     company = company.trim(),
                     model = model.trim(),
