@@ -48,6 +48,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -89,6 +93,19 @@ fun StockScreen(
     val lang = if (isEnglish) "EN" else "BN"
 
     val brands = listOf("ALL", "Apple", "Samsung", "Google", "Xiaomi", "OnePlus")
+    var groupBy by remember { mutableStateOf("Category") }
+    val groupedProducts = remember(products, groupBy) {
+        val groups = products.groupBy { product ->
+            when (groupBy) {
+                "Category" -> product.productType.ifBlank { "New" }.replaceFirstChar { it.uppercase() }
+                "Model" -> product.model.ifBlank { "Unknown Model" }
+                "Supplier" -> product.supplier.ifBlank { "Unknown Supplier" }
+                "Company" -> product.company.ifBlank { "Unknown Company" }
+                else -> product.productType.ifBlank { "New" }
+            }
+        }
+        groups.toSortedMap(String.CASE_INSENSITIVE_ORDER).toList()
+    }
     val inStockCount = products.count { it.status == ProductStatus.IN_STOCK.name }
     val inStockValue = products.filter { it.status == ProductStatus.IN_STOCK.name }.sumOf { it.purchasePrice }
 
@@ -290,6 +307,41 @@ fun StockScreen(
                 }
             }
 
+            // Stock grouping options
+            item {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(
+                        text = if (isEnglish) "Group by" else "গ্রুপ অনুযায়ী সাজান",
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        items(listOf("Category", "Model", "Supplier", "Company")) { option ->
+                            val selected = groupBy == option
+                            FilterChip(
+                                selected = selected,
+                                onClick = { groupBy = option },
+                                label = {
+                                    Text(
+                                        when (option) {
+                                            "Category" -> if (isEnglish) "Category (New / Used)" else "ক্যাটাগরি (New / Used)"
+                                            "Model" -> if (isEnglish) "Model" else "মডেল"
+                                            "Supplier" -> if (isEnglish) "Supplier" else "সাপ্লায়ার"
+                                            else -> if (isEnglish) "Company" else "কোম্পানি"
+                                        },
+                                        fontSize = 11.sp
+                                    )
+                                },
+                                colors = FilterChipDefaults.filterChipColors(
+                                    selectedContainerColor = AppleBlue,
+                                    selectedLabelColor = Color.White
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+
             // Brand Chips
             item {
                 LazyRow(
@@ -378,15 +430,37 @@ fun StockScreen(
                     }
                 }
             } else {
-                items(products, key = { it.id }) { product ->
-                    ProductItemCard(
-                        product = product,
-                        onSellClick = { onSellProduct(product) },
-                        onEditClick = { onEditProduct(product) },
-                        onDeleteClick = { onDeleteProduct(product) },
-                        onReturnClick = { onReturnProduct(product) },
-                        onRestoreClick = { onRestoreProduct(product) }
-                    )
+                items(groupedProducts, key = { it.first }) { (groupName, groupItems) ->
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(10.dp),
+                            color = AppleBlue.copy(alpha = 0.10f)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 9.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(groupName, fontSize = 13.sp, fontWeight = FontWeight.Bold, color = AppleBlue)
+                                Text(
+                                    text = if (isEnglish) "${groupItems.size} items" else "${groupItems.size} টি পণ্য",
+                                    fontSize = 11.sp,
+                                    color = AppleBlue
+                                )
+                            }
+                        }
+                        groupItems.forEach { product ->
+                            ProductItemCard(
+                                product = product,
+                                onSellClick = { onSellProduct(product) },
+                                onEditClick = { onEditProduct(product) },
+                                onDeleteClick = { onDeleteProduct(product) },
+                                onReturnClick = { onReturnProduct(product) },
+                                onRestoreClick = { onRestoreProduct(product) }
+                            )
+                        }
+                    }
                 }
             }
 
