@@ -270,6 +270,8 @@ fun MainAppContent(viewModel: InventoryViewModel) {
 
     val context = LocalContext.current
     var showGitHubSyncDialog by remember { mutableStateOf(false) }
+    var isStockMenuExpanded by remember { mutableStateOf(false) }
+    var selectedStockGroup by remember { mutableStateOf("Model") }
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val drawerScope = rememberCoroutineScope()
 
@@ -481,7 +483,6 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                         Text("Apple Area Shop", style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(16.dp))
                         val menuItems = listOf(
                             "Dashboard" to AppTab.DASHBOARD,
-                            "Stock" to AppTab.STOCK,
                             "Sell" to AppTab.SALES,
                             "Purchase" to AppTab.PURCHASE,
                             "Customers" to AppTab.CUSTOMERS,
@@ -501,6 +502,45 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                                 onClick = { viewModel.setTab(tab); drawerScope.launch { drawerState.close() } },
                                 modifier = Modifier.padding(vertical = 2.dp)
                             )
+                            if (tab == AppTab.DASHBOARD) {
+                                NavigationDrawerItem(
+                                    label = {
+                                        androidx.compose.foundation.layout.Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = androidx.compose.foundation.layout.Arrangement.SpaceBetween
+                                        ) {
+                                            Text("Stock")
+                                            Text(if (isStockMenuExpanded) "⌃" else "⌄")
+                                        }
+                                    },
+                                    selected = currentTab == AppTab.STOCK,
+                                    onClick = {
+                                        isStockMenuExpanded = !isStockMenuExpanded
+                                        viewModel.setTab(AppTab.STOCK)
+                                    },
+                                    modifier = Modifier.padding(vertical = 2.dp)
+                                )
+                                if (isStockMenuExpanded) {
+                                    listOf(
+                                        "New" to "New",
+                                        "Used" to "Used",
+                                        "Model" to "Model",
+                                        "Supplier" to "Supplier",
+                                        "Company" to "Company"
+                                    ).forEach { (label, group) ->
+                                        NavigationDrawerItem(
+                                            label = { Text(label, fontSize = 13.sp) },
+                                            selected = currentTab == AppTab.STOCK && selectedStockGroup == group,
+                                            onClick = {
+                                                selectedStockGroup = group
+                                                viewModel.setTab(AppTab.STOCK)
+                                                drawerScope.launch { drawerState.close() }
+                                            },
+                                            modifier = Modifier.padding(start = 24.dp, top = 1.dp, bottom = 1.dp)
+                                        )
+                                    }
+                                }
+                            }
                         }
                         NavigationDrawerItem(
                             label = { Text("Logout") },
@@ -603,7 +643,8 @@ fun MainAppContent(viewModel: InventoryViewModel) {
                         onReturnProduct = { viewModel.openReturnProduct(it) },
                         onRestoreProduct = { viewModel.restoreReturnedProductToStock(it) },
                         selectedStatusFilter = selectedStatusFilter,
-                        onStatusFilterChange = { viewModel.setStatusFilter(it) }
+                        onStatusFilterChange = { viewModel.setStatusFilter(it) },
+                        selectedStockGroup = selectedStockGroup
                     )
                     AppTab.EXPENSES -> ExpenseScreen(
                         expenses = filteredExpenses,
