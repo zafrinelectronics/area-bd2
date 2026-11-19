@@ -94,25 +94,39 @@ fun StockScreen(
 
     val brands = listOf("ALL", "Apple", "Samsung", "Google", "Xiaomi", "OnePlus")
     var groupBy by remember { mutableStateOf("Model") }
-    val displayedProducts = remember(products, groupBy) {
-        when (groupBy) {
+    var selectedGroupValue by remember { mutableStateOf<String?>(null) }
+    val displayedProducts = remember(products, groupBy, selectedGroupValue) {
+        val typeFiltered = when (groupBy) {
             "New" -> products.filter { it.productType.equals("New", ignoreCase = true) || it.productType.isBlank() }
             "Used" -> products.filter { it.productType.equals("Used", ignoreCase = true) }
             else -> products
         }
-    }
-    val groupedProducts = remember(displayedProducts, groupBy) {
-        val groups = displayedProducts.groupBy { product ->
-            when (groupBy) {
-                "New" -> "New"
-                "Used" -> "Used"
+        if (selectedGroupValue == null) typeFiltered else typeFiltered.filter { product ->
+            val value = when (groupBy) {
                 "Model" -> product.model.ifBlank { "Unknown Model" }
                 "Supplier" -> product.supplier.ifBlank { "Unknown Supplier" }
                 "Company" -> product.company.ifBlank { "Unknown Company" }
-                else -> product.model.ifBlank { "Unknown Model" }
+                else -> selectedGroupValue
             }
+            value.equals(selectedGroupValue, ignoreCase = true)
         }
-        groups.toSortedMap(String.CASE_INSENSITIVE_ORDER).toList()
+    }
+    val groupedProducts = remember(displayedProducts, groupBy, selectedGroupValue) {
+        if (selectedGroupValue != null) {
+            listOf(selectedGroupValue!! to displayedProducts)
+        } else {
+            val groups = displayedProducts.groupBy { product ->
+                when (groupBy) {
+                    "New" -> "New"
+                    "Used" -> "Used"
+                    "Model" -> product.model.ifBlank { "Unknown Model" }
+                    "Supplier" -> product.supplier.ifBlank { "Unknown Supplier" }
+                    "Company" -> product.company.ifBlank { "Unknown Company" }
+                    else -> product.model.ifBlank { "Unknown Model" }
+                }
+            }
+            groups.toSortedMap(String.CASE_INSENSITIVE_ORDER).toList()
+        }
     }
     val inStockCount = products.count { it.status == ProductStatus.IN_STOCK.name }
     val inStockValue = products.filter { it.status == ProductStatus.IN_STOCK.name }.sumOf { it.purchasePrice }
@@ -328,7 +342,7 @@ fun StockScreen(
                             val selected = groupBy == option
                             FilterChip(
                                 selected = selected,
-                                onClick = { groupBy = option },
+                                onClick = { groupBy = option; selectedGroupValue = null },
                                 label = {
                                     Text(
                                         when (option) {
@@ -401,6 +415,26 @@ fun StockScreen(
                 }
             }
 
+            // Selected group breadcrumb and return-to-groups action
+            if (selectedGroupValue != null) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Text(
+                            text = if (isEnglish) "‹ Back to ${groupBy}" else "‹ ${groupBy} তালিকায় ফিরে যান",
+                            color = AppleBlue,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.clickable { selectedGroupValue = null }.padding(vertical = 8.dp)
+                        )
+                        Text(" / ${selectedGroupValue}", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
+
             // Empty state or Items
             if (groupedProducts.isEmpty()) {
                 item {
@@ -442,7 +476,13 @@ fun StockScreen(
                 items(groupedProducts, key = { it.first }) { (groupName, groupItems) ->
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Surface(
-                            modifier = Modifier.fillMaxWidth(),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .then(
+                                    if (selectedGroupValue == null && groupBy in listOf("Model", "Supplier", "Company")) {
+                                        Modifier.clickable { selectedGroupValue = groupName }
+                                    } else Modifier
+                                ),
                             shape = RoundedCornerShape(10.dp),
                             color = AppleBlue.copy(alpha = 0.10f)
                         ) {
