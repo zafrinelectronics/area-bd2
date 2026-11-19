@@ -395,7 +395,7 @@ fun StockScreen(
                             color = AppleBlue,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
-                            modifier = Modifier.clickable { selectedGroupValue = null }.padding(vertical = 8.dp)
+                            modifier = Modifier.clickable { /* use the side drawer to change the selected stock group */ }.padding(vertical = 8.dp)
                         )
                         Text(" / ${selectedGroupValue}", fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                     }
