@@ -145,6 +145,7 @@ fun AddEditProductScreen(
 
     // Preset options from customizable settings
     val companyPresets = shopSettings.companyPresets
+    val modelPresets = shopSettings.modelPresets
     val variantPresets = shopSettings.variantPresets
     val colorPresets = shopSettings.colorPresets
     val batteryPresets = shopSettings.batteryPresets
@@ -564,6 +565,24 @@ fun AddEditProductScreen(
                         fontSize = 13.sp,
                         color = MaterialTheme.colorScheme.primary
                     )
+                    if (modelPresets.isNotEmpty()) {
+                        FlowRow(
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            modelPresets.forEach { preset ->
+                                FilterChip(
+                                    selected = model.equals(preset, ignoreCase = true),
+                                    onClick = { model = preset },
+                                    label = { Text(preset, fontSize = 12.sp) },
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = AppleBlue,
+                                        selectedLabelColor = Color.White
+                                    )
+                                )
+                            }
+                        }
+                    }
                     OutlinedTextField(
                         value = model,
                         onValueChange = { model = it },
