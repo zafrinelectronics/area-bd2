@@ -67,7 +67,7 @@ object AppPdfReports {
                 summary.add("মোট স্টক পণ্য" to stock.size.toString())
                 summary.add("স্টক ক্রয়মূল্য" to money(stock.sumOf { it.purchasePrice }))
                 summary.add("সম্ভাব্য বিক্রয়মূল্য" to money(stock.sumOf { it.targetSalePrice }))
-                rows.addAll(stock.map { "${it.company} ${it.model} ${it.variant} | ${it.color} | IMEI ${it.imei} | সাপ্লায়ার ${it.supplier} | ক্রয় ${money(it.purchasePrice)} | বিক্রয় ${money(it.targetSalePrice)}" })
+                rows.addAll(stock.sortedByDescending { it.createdAt }.map { "${date(it.createdAt)} | ${it.company} ${it.model} | ভ্যারিয়েন্ট ${it.variant} | রং ${it.color} | ব্যাটারি ${it.batteryHealth} | বক্স ${it.boxCondition} | IMEI ${it.imei} | সাপ্লায়ার ${it.supplier} | ক্রয় ${money(it.purchasePrice)} | বিক্রয় ${money(it.targetSalePrice)} | ধরন ${it.productType} | নোট ${it.notes.ifBlank { "—" }} | অবস্থা ${it.status}" })
             }
             AppTab.SALES -> {
                 summary.add("মোট ইনভয়েস" to sales.size.toString())
